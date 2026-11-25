@@ -15,6 +15,8 @@ import { confirmDiscard, useTrackDirty } from '../lib/dirty'
 import { deepEqual } from '../lib/paths'
 import { removeFile } from '../lib/storage'
 import { cleanupReplacedFiles, clearDraft, friendlyDbError, loadDraft, plural, saveDraft } from '../lib/formHelpers'
+import { deFields, translationProgress, type EditLang } from '../lib/translate'
+import { LangTabs } from './LangTabs'
 
 type Row = { id: string; sort_order: number } & Record<string, unknown>
 type OwnedFile = { bucket: 'media' | 'documents'; url: string | null | undefined }
@@ -39,6 +41,8 @@ export interface CollectionConfig<T extends Row> {
   /** Storage objects owned by a row, removed after the row is deleted. */
   ownedFiles?: (row: T) => OwnedFile[] | Promise<OwnedFile[]>
   onChanged?: (rows: T[]) => void
+  /** Field names that also get a German version (translations.de.<name>), edited on a "Deutsch" tab. */
+  translatable?: string[]
 }
 
 export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
@@ -51,6 +55,10 @@ export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
   const [editing, setEditing] = useState<{ original: T | null; baseline: T; draft: T } | null>(null)
   const [errors, setErrors] = useState<Errors>({})
   const [saving, setSaving] = useState(false)
+  const [lang, setLang] = useState<EditLang>('en')
+  const translatable = cfg.translatable ?? []
+  const germanFields = editing && translatable.length ? deFields(fields, translatable, editing.draft) : []
+  const allFields = [...fields, ...germanFields]
 
   const load = useCallback(async () => {
     const { data, error } = await requireSupabase().from(table).select(cfg.select ?? '*').order('sort_order')
@@ -84,6 +92,7 @@ export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
     const row = pendingDraft.id ? rows.find((r) => r.id === pendingDraft.id) : null
     const baseline = row ? structuredClone(row) : ({ ...cfg.blank(), id: '', sort_order: rows.length } as T)
     setErrors({})
+    setLang('en')
     setEditing({ original: row ?? null, baseline, draft: pendingDraft.draft })
     setPendingDraft(null)
   }
@@ -106,11 +115,13 @@ export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
 
   const openNew = () => {
     setErrors({})
+    setLang('en')
     const draft = { ...cfg.blank(), id: '', sort_order: rows.length } as T
     setEditing({ original: null, baseline: structuredClone(draft), draft })
   }
   const openEdit = (row: T) => {
     setErrors({})
+    setLang('en')
     setEditing({ original: row, baseline: structuredClone(row), draft: structuredClone(row) })
   }
   const close = () => {
@@ -128,9 +139,15 @@ export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
 
   const save = async () => {
     if (!editing) return
-    const errs = validate(fields, editing.draft)
+    const errs = validate(allFields, editing.draft)
     setErrors(errs)
-    if (Object.keys(errs).length) return toast.error('Please fix the highlighted fields')
+    const keys = Object.keys(errs)
+    if (keys.length) {
+      // Jump to the language tab that holds the problem.
+      if (keys.every((k) => k.startsWith('translations.'))) setLang('de')
+      else if (keys.every((k) => !k.startsWith('translations.'))) setLang('en')
+      return toast.error('Please fix the highlighted fields')
+    }
     setSaving(true)
     const sb = requireSupabase()
     const payload = toRow(editing.draft)
@@ -139,7 +156,7 @@ export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
     const q = isNew ? sb.from(table).insert(payload) : sb.from(table).update(payload).eq('id', editing.draft.id)
     const { data, error } = await q.select(cfg.select ?? '*').single()
     setSaving(false)
-    if (error) return toast.error(friendlyDbError(error, fields))
+    if (error) return toast.error(friendlyDbError(error, allFields))
     const saved = data as unknown as T
     clearDraft(draftKey)
     // Only now that the save succeeded: delete files that were replaced or removed.
@@ -300,17 +317,19 @@ export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
       >
         {editing && (
           <div className="space-y-8">
+            {translatable.length > 0 && <LangTabs lang={lang} onChange={setLang} progress={translationProgress(translatable, editing.draft)} />}
             <FormRenderer
-              fields={fields}
+              key={lang}
+              fields={lang === 'de' ? germanFields : fields}
               values={editing.draft}
               onChange={(draft) => {
                 setEditing((e) => (e ? { ...e, draft } : e))
                 // Once errors are showing, re-validate live so fixed fields clear immediately.
-                if (Object.keys(errors).length) setErrors(validate(fields, draft))
+                if (Object.keys(errors).length) setErrors(validate(translatable.length ? [...fields, ...deFields(fields, translatable, draft)] : fields, draft))
               }}
               errors={errors}
             />
-            {cfg.editorExtra?.(editing.original)}
+            {lang === 'en' && cfg.editorExtra?.(editing.original)}
           </div>
         )}
       </Dialog>

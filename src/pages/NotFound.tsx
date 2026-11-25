@@ -3,21 +3,25 @@ import { usePortfolio } from '@/data/PortfolioContext'
 import { notFoundHead } from '@/seo/head'
 import { useHead } from '@/seo/useHead'
 import { LinkButton } from '@/components/ui/Button'
+import { useLocale, useLocalePath, useT } from '@/i18n'
 
 export default function NotFound() {
   const { data } = usePortfolio()
   const { pathname } = useLocation()
-  useHead(notFoundHead(data))
+  const t = useT()
+  const lp = useLocalePath()
+  const locale = useLocale()
+  useHead(notFoundHead(data, locale))
   return (
     <main id="main" className="bg-grid mask-radial flex min-h-[80vh] items-center justify-center px-5 pt-24">
       <div className="text-center font-mono">
         <h1 className="text-7xl font-semibold text-white md:text-9xl">
-          404<span className="sr-only">: page not found</span>
+          404<span className="sr-only">{t.notFound.srTitle}</span>
         </h1>
         <p className="mt-4 text-accent">$ cd {pathname}</p>
-        <p className="mt-1 text-muted">no such file or directory</p>
-        <LinkButton to="/" className="mt-10">
-          Return home
+        <p className="mt-1 text-muted">{t.notFound.missing}</p>
+        <LinkButton to={lp('/')} className="mt-10">
+          {t.notFound.home}
         </LinkButton>
       </div>
     </main>

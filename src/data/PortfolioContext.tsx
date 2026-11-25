@@ -3,6 +3,8 @@ import { defaultData } from '@/content/defaults'
 import { fetchPortfolio } from '@/data/fetchPortfolio'
 import { isSupabaseConfigured } from '@/lib/env'
 import type { PortfolioData } from '@/types/content'
+import { useLocale } from '@/i18n'
+import { localizeData } from '@/i18n/localize'
 
 interface PortfolioState {
   data: PortfolioData
@@ -38,7 +40,13 @@ export function PortfolioProvider({ initialData, children }: { initialData?: Por
     void refresh()
   }, [])
 
-  const value = useMemo(() => ({ data, ready, error, refresh }), [data, ready, error])
+  // Every consumer receives data in the page's language (German overlays English, field by field).
+  const locale = useLocale()
+  const localized = useMemo(() => localizeData(data, locale), [data, locale])
+  useEffect(() => {
+    document.documentElement.lang = locale
+  }, [locale])
+  const value = useMemo(() => ({ data: localized, ready, error, refresh }), [localized, ready, error])
   return <PortfolioCtx.Provider value={value}>{children}</PortfolioCtx.Provider>
 }
 

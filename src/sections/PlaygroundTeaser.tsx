@@ -2,9 +2,12 @@ import { Link } from 'react-router-dom'
 import { ArrowUpRight, Bug, Gamepad2, Keyboard, Layers } from 'lucide-react'
 import { usePortfolio } from '@/data/PortfolioContext'
 import { Reveal } from '@/components/site/Reveal'
+import { useLocalePath, useT } from '@/i18n'
 
 export function PlaygroundTeaser() {
   const { data } = usePortfolio()
+  const t = useT()
+  const lp = useLocalePath()
   const copy = data.settings.content.playground
   const items = [
     { key: 'typing', name: 'Keystroke Sprint', Icon: Keyboard },
@@ -24,14 +27,14 @@ export function PlaygroundTeaser() {
                 <div>
                   <p className="font-mono text-xs text-accent">// {copy.eyebrow}</p>
                   <h2 className="mt-1 text-lg font-semibold text-white">{copy.heading}</h2>
-                  <p className="mt-0.5 text-sm text-muted">3 mini games built with React &amp; TypeScript.</p>
+                  <p className="mt-0.5 text-sm text-muted">{t.playgroundTeaser.tagline}</p>
                 </div>
               </div>
               <ul className="flex flex-wrap gap-2">
                 {items.map(({ key, name, Icon }) => (
                   <li key={key}>
                     <Link
-                      to={`/playground?game=${key}`}
+                      to={lp(`/playground?game=${key}`)}
                       className="inline-flex items-center gap-2 rounded-lg border border-line-strong bg-black/20 px-3 py-2 text-sm text-fg transition-colors hover:border-accent/50 hover:text-accent"
                     >
                       <Icon className="h-4 w-4" aria-hidden /> {name}

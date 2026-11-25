@@ -125,6 +125,7 @@ export default function ProjectsPage() {
       <CollectionManager<P>
         table="projects"
         singular="Project"
+        translatable={['title', 'category', 'short_description', 'description', 'role', 'key_features', 'challenges', 'solutions', 'outcome', 'seo_title', 'seo_description']}
         select="*, project_images(*)"
         visibilityKey="is_published"
         featuredKey="is_featured"

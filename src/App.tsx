@@ -31,9 +31,11 @@ function PublicApp() {
   return (
     <PublicLayout>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/projects/:slug" element={<ProjectPage />} />
-        {data.settings.sections.playground && <Route path="/playground" element={<Playground />} />}
+        {(['', '/de'] as const).map((prefix) => [
+          <Route key={`${prefix}home`} path={prefix || '/'} element={<Home />} />,
+          <Route key={`${prefix}project`} path={`${prefix}/projects/:slug`} element={<ProjectPage />} />,
+          data.settings.sections.playground && <Route key={`${prefix}play`} path={`${prefix}/playground`} element={<Playground />} />,
+        ])}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </PublicLayout>

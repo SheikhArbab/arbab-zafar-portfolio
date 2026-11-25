@@ -16,6 +16,7 @@ export default function EducationPage() {
       <CollectionManager<Education & Record<string, unknown>>
         table="education"
         singular="Entry"
+        translatable={['title', 'institution', 'date_label', 'description']}
         visibilityKey="is_visible"
         searchKeys={['title', 'institution', 'kind']}
         filter={{ key: 'kind', label: 'Types', options: kinds }}

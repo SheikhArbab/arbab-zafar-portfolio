@@ -4,6 +4,7 @@ import { SingletonEditor, type FieldGroup } from '../components/SingletonEditor'
 const groups: FieldGroup[] = [
   {
     title: 'Identity',
+    translate: ['title', 'location'],
     fields: [
       { name: 'full_name', label: 'Full name', type: 'text', required: true, max: 80 },
       { name: 'short_name', label: 'Short name', type: 'text', required: true, help: 'Used in the logo, e.g. “arbab.dev”', max: 30 },
@@ -15,6 +16,7 @@ const groups: FieldGroup[] = [
   },
   {
     title: 'Availability',
+    translate: ['availability_text'],
     fields: [
       { name: 'is_available', label: 'Show “available for opportunities” badge', type: 'switch' },
       { name: 'availability_text', label: 'Availability text', type: 'text', max: 60 },
@@ -23,6 +25,7 @@ const groups: FieldGroup[] = [
   {
     title: 'Hero',
     description: 'The first screen visitors see.',
+    translate: ['hero_eyebrow', 'hero_highlight', 'hero_heading', 'hero_description', 'hero_roles', 'terminal_lines'],
     fields: [
       { name: 'hero_eyebrow', label: 'Eyebrow line', type: 'text', max: 90 },
       { name: 'hero_highlight', label: 'Highlighted word(s)', type: 'text', help: 'Word(s) from the heading rendered with the gradient.' },
@@ -43,6 +46,7 @@ const groups: FieldGroup[] = [
   },
   {
     title: 'About',
+    translate: ['about_heading', 'about_lead', 'about_body', 'about_highlights', 'about_cards'],
     fields: [
       { name: 'about_heading', label: 'Section heading', type: 'text', max: 100 },
       { name: 'about_lead', label: 'Lead paragraph', type: 'textarea', rows: 3, max: 400 },
@@ -96,6 +100,7 @@ const groups: FieldGroup[] = [
   {
     title: 'Deutsch lernen 🇩🇪',
     description: 'A subtle strip near the contact section.',
+    translate: ['german.badge', 'german.headline', 'german.note', 'german.points'],
     fields: [
       { name: 'german.enabled', label: 'Show German learning strip', type: 'switch' },
       { name: 'german.badge', label: 'Badge', type: 'text' },

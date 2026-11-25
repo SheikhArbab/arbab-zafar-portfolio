@@ -63,6 +63,11 @@
   to = "/spa.html"
   status = 200
 
+[[redirects]]
+  from = "/de/projects/*"
+  to = "/spa.html"
+  status = 200
+
 # Anything else is a genuine 404 (the React app renders the not-found page).
 [[redirects]]
   from = "/*"

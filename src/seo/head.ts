@@ -1,4 +1,5 @@
 import type { PortfolioData, Project } from '@/types/content'
+import { dict, localizePath, type Locale } from '@/i18n'
 
 export interface HeadData {
   title: string
@@ -12,6 +13,18 @@ export interface HeadData {
   twitter: string
   favicon: string | null
   jsonLd: Record<string, unknown>[]
+  locale: Locale
+  /** hreflang alternates (en, de, x-default) */
+  alternates: { hreflang: string; href: string }[]
+}
+
+/** Language versions of one page, for <link rel="alternate" hreflang>. */
+function alternatesFor(base: string, path: string) {
+  return [
+    { hreflang: 'en', href: `${base}${localizePath(path, 'en')}` },
+    { hreflang: 'de', href: `${base}${localizePath(path, 'de')}` },
+    { hreflang: 'x-default', href: `${base}${localizePath(path, 'en')}` },
+  ]
 }
 
 const trimSlash = (u: string) => u.replace(/\/+$/, '')
@@ -51,13 +64,15 @@ function personSchema(data: PortfolioData) {
   }
 }
 
-export function homeHead(data: PortfolioData): HeadData {
+export function homeHead(data: PortfolioData, locale: Locale = 'en'): HeadData {
   const { settings, profile } = data
   const base = siteUrl(data)
   return {
     title: settings.seo_title || `${profile.full_name}: ${profile.title}`,
     description: settings.seo_description || profile.hero_description,
-    canonical: `${base}/`,
+    canonical: `${base}${localizePath('/', locale)}`,
+    locale,
+    alternates: alternatesFor(base, '/'),
     image: absolute(base, settings.og_image_url || profile.avatar_url || '/og-default.png'),
     type: 'profile',
     keywords: settings.seo_keywords,
@@ -74,7 +89,7 @@ export function homeHead(data: PortfolioData): HeadData {
             '@id': `${base}/#website`,
             url: base,
             name: settings.site_name,
-            inLanguage: 'en',
+            inLanguage: locale,
             publisher: { '@id': `${base}/#person` },
           },
           {
@@ -102,16 +117,17 @@ export function homeHead(data: PortfolioData): HeadData {
   }
 }
 
-export function projectHead(data: PortfolioData, project: Project): HeadData {
+export function projectHead(data: PortfolioData, project: Project, locale: Locale = 'en'): HeadData {
   const base = siteUrl(data)
-  const home = homeHead(data)
-  const url = `${base}/projects/${project.slug}`
+  const home = homeHead(data, locale)
+  const url = `${base}${localizePath(`/projects/${project.slug}`, locale)}`
   const description = project.seo_description || project.short_description || home.description
   return {
     ...home,
-    title: project.seo_title || `${project.title}: Case Study · ${data.profile.full_name}`,
+    title: project.seo_title || `${project.title}: ${dict(locale).seo.caseStudy} · ${data.profile.full_name}`,
     description,
     canonical: url,
+    alternates: alternatesFor(base, `/projects/${project.slug}`),
     image: absolute(base, project.thumbnail_url) ?? home.image,
     type: 'article',
     keywords: [...project.technologies, data.profile.full_name],
@@ -149,20 +165,18 @@ export function projectHead(data: PortfolioData, project: Project): HeadData {
   }
 }
 
-export function playgroundHead(data: PortfolioData): HeadData {
+export function playgroundHead(data: PortfolioData, locale: Locale = 'en'): HeadData {
   const base = siteUrl(data)
-  const home = homeHead(data)
+  const home = homeHead(data, locale)
+  const t = dict(locale)
   const name = data.profile.full_name
-  const games = [
-    ['Keystroke Sprint', 'A 30-second typing race using real developer commands and code.'],
-    ['Bug Hunt', 'A reflex game: squash bugs before they ship, but spare the working features.'],
-    ['Stack Match', 'A memory card game built from a full-stack developer\'s tech stack.'],
-  ]
+  const games = (['typing', 'bugs', 'memory'] as const).map((k) => [t.playground.games[k].name, t.playground.games[k].blurb])
   return {
     ...home,
-    title: `Playground: Mini Games · ${name}`,
-    description: `Three small browser games built by ${name} with React and TypeScript: a code typing sprint, a bug-squashing reflex game and a tech-stack memory match.`,
-    canonical: `${base}/playground`,
+    title: t.seo.playgroundTitle(name),
+    description: t.seo.playgroundDesc(name),
+    canonical: `${base}${localizePath('/playground', locale)}`,
+    alternates: alternatesFor(base, '/playground'),
     type: 'website',
     keywords: ['browser games', 'React games', 'typing game', name],
     jsonLd: [
@@ -172,8 +186,9 @@ export function playgroundHead(data: PortfolioData): HeadData {
           {
             '@type': 'CollectionPage',
             '@id': `${base}/playground#page`,
-            url: `${base}/playground`,
+            url: `${base}${localizePath('/playground', locale)}`,
             name: 'Playground',
+            inLanguage: locale,
             isPartOf: { '@id': `${base}/#website` },
             hasPart: games.map(([n, d]) => ({
               '@type': 'VideoGame',
@@ -191,8 +206,8 @@ export function playgroundHead(data: PortfolioData): HeadData {
   }
 }
 
-export function notFoundHead(data: PortfolioData): HeadData {
-  return { ...homeHead(data), title: `Page not found · ${data.settings.site_name}`, robots: 'noindex', canonical: '', jsonLd: [] }
+export function notFoundHead(data: PortfolioData, locale: Locale = 'en'): HeadData {
+  return { ...homeHead(data, locale), title: `${dict(locale).seo.notFound} · ${data.settings.site_name}`, robots: 'noindex', canonical: '', alternates: [], jsonLd: [] }
 }
 
 const esc = (s: string) =>
@@ -201,6 +216,8 @@ const esc = (s: string) =>
 const ld = (o: unknown) => JSON.stringify(o).replace(/</g, '\\u003c')
 
 /** Serialize head tags for the build-time prerenderer. */
+const OG_LOCALE: Record<Locale, string> = { en: 'en_GB', de: 'de_DE' }
+
 export function renderHeadTags(h: HeadData): string {
   const tags = [
     `<title>${esc(h.title)}</title>`,
@@ -208,6 +225,9 @@ export function renderHeadTags(h: HeadData): string {
     h.keywords.length ? `<meta name="keywords" content="${esc(h.keywords.join(', '))}" />` : '',
     `<meta name="robots" content="${esc(h.robots)}" />`,
     h.canonical ? `<link rel="canonical" href="${esc(h.canonical)}" />` : '',
+    ...h.alternates.map((a) => `<link rel="alternate" hreflang="${esc(a.hreflang)}" href="${esc(a.href)}" />`),
+    `<meta property="og:locale" content="${OG_LOCALE[h.locale]}" />`,
+    `<meta property="og:locale:alternate" content="${OG_LOCALE[h.locale === 'de' ? 'en' : 'de']}" />`,
     `<meta property="og:type" content="${h.type === 'article' ? 'article' : h.type}" />`,
     `<meta property="og:site_name" content="${esc(h.siteName)}" />`,
     `<meta property="og:title" content="${esc(h.title)}" />`,
@@ -269,6 +289,16 @@ export function applyHead(h: HeadData) {
   meta('name', 'twitter:description', h.description)
   meta('name', 'twitter:image', h.image)
   link('canonical', h.canonical)
+  meta('property', 'og:locale', OG_LOCALE[h.locale])
+  meta('property', 'og:locale:alternate', OG_LOCALE[h.locale === 'de' ? 'en' : 'de'])
+  document.head.querySelectorAll('link[rel="alternate"][hreflang]').forEach((l) => l.remove())
+  for (const a of h.alternates) {
+    const l = document.createElement('link')
+    l.rel = 'alternate'
+    l.hreflang = a.hreflang
+    l.href = a.href
+    document.head.appendChild(l)
+  }
   if (h.favicon) link('icon', h.favicon)
   document.head.querySelectorAll('script[type="application/ld+json"]').forEach((s) => s.remove())
   for (const o of h.jsonLd) {

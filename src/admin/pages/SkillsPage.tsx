@@ -25,6 +25,7 @@ export default function SkillsPage() {
         <CollectionManager<SkillCategory & Record<string, unknown>>
           table="skill_categories"
           singular="Category"
+          translatable={['name', 'description']}
           visibilityKey="is_visible"
           onChanged={(rows) => setCats(rows)}
           title={(r) => r.name}

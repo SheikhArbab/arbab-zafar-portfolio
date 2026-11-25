@@ -5,6 +5,7 @@ import { SkillIcon } from '@/components/site/SkillIcon'
 import type { Skill } from '@/types/content'
 import { GameFrame, ResultPanel, Stat } from './GameFrame'
 import { readBest, saveBest } from './scores'
+import { useT } from '@/i18n'
 
 /** Stack Match: a memory game built from the technologies in the portfolio's own skills list. */
 
@@ -38,6 +39,8 @@ function deal(pool: Pick<Skill, 'name' | 'icon' | 'icon_url'>[]): Card[] {
 }
 
 export default function StackMatch() {
+  const t = useT()
+  const G = t.games.memory
   const { data } = usePortfolio()
   const pool = useMemo(() => {
     // Prefer skills that have an icon and unique names; fall back to a core list.
@@ -109,24 +112,24 @@ export default function StackMatch() {
 
   return (
     <GameFrame
-      title="stack-match.ts · find the pairs"
+      title={G.title}
       hud={
         <>
-          <Stat label="moves" value={moves} accent={running} />
-          <Stat label="pairs" value={`${matched.size}/${PAIRS}`} />
-          <Stat label="time" value={`${seconds}s`} />
-          <Stat label="best" value={best !== undefined ? `${best} moves` : '—'} />
+          <Stat label={G.moves} value={moves} accent={running} />
+          <Stat label={G.pairs} value={`${matched.size}/${PAIRS}`} />
+          <Stat label={t.games.time} value={`${seconds}s`} />
+          <Stat label={t.games.best} value={best !== undefined ? `${best} ${G.unitMoves}` : '—'} />
         </>
       }
-      footer="Flip two cards at a time and match the technologies from my stack in as few moves as possible."
+      footer={G.footer}
     >
       {done ? (
         <ResultPanel
-          title={`Stack assembled in ${moves} moves`}
+          title={G.result(moves)}
           lines={[
-            ['moves', moves],
-            ['time', `${seconds}s`],
-            ['pairs', PAIRS],
+            [G.moves, moves],
+            [t.games.time, `${seconds}s`],
+            [G.pairs, PAIRS],
           ]}
           record={record}
           onRetry={reset}
@@ -140,7 +143,7 @@ export default function StackMatch() {
               <li key={c.key}>
                 <button
                   onClick={() => flip(idx)}
-                  aria-label={faceUp ? c.skill.name : `Hidden card ${idx + 1}`}
+                  aria-label={faceUp ? c.skill.name : G.hidden(idx + 1)}
                   className="relative block aspect-[4/5] w-full rounded-xl transition-transform duration-500 [transform-style:preserve-3d]"
                   style={{ transform: faceUp ? 'rotateY(180deg)' : 'none' }}
                 >

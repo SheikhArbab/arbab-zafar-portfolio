@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { usePortfolio } from '@/data/PortfolioContext'
 import { homeHead } from '@/seo/head'
 import { useHead } from '@/seo/useHead'
+import { useLocale } from '@/i18n'
 import { Hero } from '@/sections/Hero'
 import { About } from '@/sections/About'
 import { Experience } from '@/sections/Experience'
@@ -18,7 +19,8 @@ export default function Home() {
   const { settings, experiences, skills, education, profile } = data
   const s = settings.sections
   const { hash } = useLocation()
-  useHead(homeHead(data))
+  const locale = useLocale()
+  useHead(homeHead(data, locale))
 
   useEffect(() => {
     if (!hash) return

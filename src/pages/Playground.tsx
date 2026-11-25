@@ -7,12 +7,13 @@ import { useHead } from '@/seo/useHead'
 import { cn } from '@/lib/utils'
 import { PageLoader } from '@/components/site/PageLoader'
 import { BEST_EVENT, readBest } from '@/playground/scores'
+import { useLocale, useLocalePath, useT } from '@/i18n'
 
 // Each game is its own small chunk, fetched only when opened.
 const games = {
-  typing: { name: 'Keystroke Sprint', blurb: 'Type real dev one-liners against the clock.', Icon: Keyboard, Comp: lazy(() => import('@/playground/KeystrokeSprint')) },
-  bugs: { name: 'Bug Hunt', blurb: 'Squash bugs before they ship. Spare the features.', Icon: Bug, Comp: lazy(() => import('@/playground/BugHunt')) },
-  memory: { name: 'Stack Match', blurb: 'Memory game built from my tech stack.', Icon: Layers, Comp: lazy(() => import('@/playground/StackMatch')) },
+  typing: { Icon: Keyboard, Comp: lazy(() => import('@/playground/KeystrokeSprint')) },
+  bugs: { Icon: Bug, Comp: lazy(() => import('@/playground/BugHunt')) },
+  memory: { Icon: Layers, Comp: lazy(() => import('@/playground/StackMatch')) },
 } as const
 
 type GameKey = keyof typeof games
@@ -21,6 +22,10 @@ const isGame = (v: string | null): v is GameKey => v === 'typing' || v === 'bugs
 export default function Playground() {
   const { data } = usePortfolio()
   const copy = data.settings.content.playground
+  const t = useT()
+  const locale = useLocale()
+  const lp = useLocalePath()
+  const names = t.playground.games
   const [params, setParams] = useSearchParams()
   const [best, setBest] = useState<ReturnType<typeof readBest>>({})
   // Games are client-only (random boards, timers, localStorage): the server and first
@@ -29,7 +34,7 @@ export default function Playground() {
   const [mounted, setMounted] = useState(false)
   const fromUrl = params.get('game')
   const current: GameKey = mounted && isGame(fromUrl) ? fromUrl : 'typing'
-  useHead(playgroundHead(data))
+  useHead(playgroundHead(data, locale))
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -45,15 +50,15 @@ export default function Playground() {
   const Game = games[current].Comp
   const bestLabel = (k: GameKey) => {
     const v = best[k]
-    if (v === undefined) return 'not played yet'
-    return k === 'typing' ? `best ${v} wpm` : k === 'bugs' ? `best ${v} pts` : `best ${v} moves`
+    if (v === undefined) return t.playground.notPlayed
+    return k === 'typing' ? t.playground.bestWpm(v) : k === 'bugs' ? t.playground.bestPts(v) : t.playground.bestMoves(v)
   }
 
   return (
     <main id="main" className="pt-28 pb-24">
       <div className="mx-auto max-w-5xl px-5 sm:px-8">
-        <Link to="/" className="mb-8 inline-flex items-center gap-1.5 font-mono text-xs text-muted hover:text-accent">
-          <ArrowLeft className="h-3.5 w-3.5" /> ~/home
+        <Link to={lp('/')} className="mb-8 inline-flex items-center gap-1.5 font-mono text-xs text-muted hover:text-accent">
+          <ArrowLeft className="h-3.5 w-3.5" /> {t.playground.back}
         </Link>
         <p className="font-mono text-xs tracking-[0.2em] text-accent uppercase">// {copy.eyebrow}</p>
         <h1 className="mt-4 text-4xl font-semibold tracking-tight text-balance text-white md:text-6xl">{copy.heading}</h1>
@@ -61,7 +66,7 @@ export default function Playground() {
 
         <div
           role="tablist"
-          aria-label="Choose a game"
+          aria-label={t.playground.choose}
           className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3"
           onKeyDown={(e) => {
             if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
@@ -74,7 +79,8 @@ export default function Playground() {
           }}
         >
           {(Object.keys(games) as GameKey[]).map((k) => {
-            const { name, blurb, Icon } = games[k]
+            const { Icon } = games[k]
+            const { name, blurb } = names[k]
             const active = k === current
             return (
               <button
@@ -103,11 +109,11 @@ export default function Playground() {
 
         <section id="game-panel" role="tabpanel" aria-labelledby={`game-tab-${current}`} className="mt-6">
           {mounted ? (
-            <Suspense fallback={<PageLoader label={`loading ${games[current].name.toLowerCase()}`} />}>
+            <Suspense fallback={<PageLoader label={t.playground.loadingGame(names[current].name)} />}>
               <Game key={current} />
             </Suspense>
           ) : (
-            <PageLoader label={`loading ${games[current].name.toLowerCase()}`} />
+            <PageLoader label={t.playground.loadingGame(names[current].name)} />
           )}
         </section>
       </div>

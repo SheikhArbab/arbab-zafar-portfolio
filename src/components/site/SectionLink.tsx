@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { localeFromPath, localizePath } from '@/i18n/paths'
 
 interface Props {
   id: string
@@ -15,7 +16,8 @@ interface Props {
  */
 export function SectionLink({ id, className, children, onClick, ...rest }: Props) {
   const { pathname } = useLocation()
-  if (pathname === '/') {
+  const home = localizePath('/', localeFromPath(pathname))
+  if (pathname === home) {
     return (
       <a href={`#${id}`} className={className} onClick={onClick} {...rest}>
         {children}
@@ -23,7 +25,7 @@ export function SectionLink({ id, className, children, onClick, ...rest }: Props
     )
   }
   return (
-    <Link to={{ pathname: '/', hash: `#${id}` }} className={className} onClick={onClick} {...rest}>
+    <Link to={{ pathname: home, hash: `#${id}` }} className={className} onClick={onClick} {...rest}>
       {children}
     </Link>
   )

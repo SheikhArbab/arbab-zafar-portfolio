@@ -1,10 +1,12 @@
 import { usePortfolio } from '@/data/PortfolioContext'
+import { useT } from '@/i18n'
 import { paragraphs, pad } from '@/lib/utils'
 import { SectionHeading } from '@/components/site/SectionHeading'
 import { Reveal } from '@/components/site/Reveal'
 import { SpotlightCard } from '@/components/site/SpotlightCard'
 
 function IdentityVisual({ image, name }: { image: string | null; name: string }) {
+  const t = useT()
   const initials = name
     .split(/\s+/)
     .map((w) => w[0])
@@ -13,7 +15,7 @@ function IdentityVisual({ image, name }: { image: string | null; name: string })
   return (
     <div className="hud relative aspect-[4/5] w-full overflow-hidden rounded-2xl border border-line bg-elev">
       {image ? (
-        <img src={image} alt={`Portrait of ${name}`} loading="lazy" decoding="async" className="h-full w-full object-cover grayscale-[35%] transition duration-700 hover:grayscale-0" />
+        <img src={image} alt={t.about.portrait(name)} loading="lazy" decoding="async" className="h-full w-full object-cover grayscale-[35%] transition duration-700 hover:grayscale-0" />
       ) : (
         <div className="bg-grid-fine relative flex h-full w-full items-center justify-center">
           <div className="absolute h-40 w-40 rounded-full bg-accent/15 blur-3xl" />
@@ -26,7 +28,7 @@ function IdentityVisual({ image, name }: { image: string | null; name: string })
       </div>
       <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/85 to-transparent px-4 pt-10 pb-3 font-mono text-[0.65rem] text-muted">
         <span>id://{name.toLowerCase().replace(/\s+/g, '.')}</span>
-        <span className="text-accent">● verified</span>
+        <span className="text-accent">{t.about.verified}</span>
       </div>
     </div>
   )

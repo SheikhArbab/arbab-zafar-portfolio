@@ -11,6 +11,8 @@ import { Panel } from './PageHeader'
 import { useTrackDirty } from '../lib/dirty'
 import { deepEqual } from '../lib/paths'
 import { cleanupReplacedFiles, clearDraft, friendlyDbError, loadDraft, saveDraft } from '../lib/formHelpers'
+import { deFields, translationProgress, type EditLang } from '../lib/translate'
+import { LangTabs } from './LangTabs'
 
 function mergeRow(table: Props['table'], data: Record<string, unknown> | null): Record<string, unknown> {
   if (table === 'profile') return mergeProfile(data) as unknown as Record<string, unknown>
@@ -23,6 +25,8 @@ export interface FieldGroup {
   description?: ReactNode
   fields: FieldDef[]
   aside?: (values: Record<string, unknown>) => ReactNode
+  /** Field names in this group that also get a German version (translations.de.<name>). */
+  translate?: string[]
 }
 
 interface Props {
@@ -39,9 +43,17 @@ export function SingletonEditor({ table, groups, onSaved, footer }: Props) {
   const [draft, setDraft] = useState<Record<string, unknown> | null>(null)
   const [errors, setErrors] = useState<Errors>({})
   const [saving, setSaving] = useState(false)
+  const [lang, setLang] = useState<EditLang>('en')
 
-  const allFields = useMemo(() => groups.flatMap((g) => g.fields), [groups])
-  const columns = useMemo(() => Array.from(new Set(allFields.map((f) => f.name.split('.')[0]))), [allFields])
+  const baseFields = useMemo(() => groups.flatMap((g) => g.fields), [groups])
+  const translatable = useMemo(() => groups.flatMap((g) => g.translate ?? []), [groups])
+  const columns = useMemo(
+    () => Array.from(new Set([...baseFields.map((f) => f.name.split('.')[0]), ...(translatable.length ? ['translations'] : [])])),
+    [baseFields, translatable],
+  )
+  const fieldsFor = (values: Record<string, unknown> | null) =>
+    translatable.length && values ? [...baseFields, ...deFields(baseFields, translatable, values)] : baseFields
+  const allFields = fieldsFor(draft)
 
   useEffect(() => {
     requireSupabase()
@@ -79,7 +91,12 @@ export function SingletonEditor({ table, groups, onSaved, footer }: Props) {
     if (!draft) return
     const errs = validate(allFields, draft)
     setErrors(errs)
-    if (Object.keys(errs).length) return toast.error('Please fix the highlighted fields')
+    const keys = Object.keys(errs)
+    if (keys.length) {
+      if (keys.every((k) => k.startsWith('translations.'))) setLang('de')
+      else if (keys.every((k) => !k.startsWith('translations.'))) setLang('en')
+      return toast.error('Please fix the highlighted fields')
+    }
     setSaving(true)
     const payload = { id: 1, ...pick(draft) }
     const { data, error } = await requireSupabase().from(table).upsert(payload).select('*').single()
@@ -130,22 +147,25 @@ export function SingletonEditor({ table, groups, onSaved, footer }: Props) {
           </span>
         </div>
       )}
-      {groups.map((g) => (
-        <Panel key={g.title} title={g.title} description={g.description}>
-          <div className={g.aside ? 'grid gap-6 xl:grid-cols-[1fr_20rem]' : undefined}>
-            <FormRenderer
-              fields={g.fields}
-              values={draft}
-              onChange={(next) => {
-                setDraft(next)
-                if (Object.keys(errors).length) setErrors(validate(allFields, next))
-              }}
-              errors={errors}
-            />
-            {g.aside?.(draft)}
-          </div>
-        </Panel>
-      ))}
+      {translatable.length > 0 && <LangTabs lang={lang} onChange={setLang} progress={translationProgress(translatable, draft)} />}
+      {groups
+        .filter((g) => lang === 'en' || g.translate?.length)
+        .map((g) => (
+          <Panel key={`${lang}:${g.title}`} title={g.title} description={lang === 'de' ? undefined : g.description}>
+            <div className={g.aside && lang === 'en' ? 'grid gap-6 xl:grid-cols-[1fr_20rem]' : undefined}>
+              <FormRenderer
+                fields={lang === 'de' ? deFields(g.fields, g.translate ?? [], draft) : g.fields}
+                values={draft}
+                onChange={(next) => {
+                  setDraft(next)
+                  if (Object.keys(errors).length) setErrors(validate(fieldsFor(next), next))
+                }}
+                errors={errors}
+              />
+              {lang === 'en' && g.aside?.(draft)}
+            </div>
+          </Panel>
+        ))}
       {footer}
 
       <AnimatePresence>

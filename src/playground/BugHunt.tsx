@@ -3,6 +3,7 @@ import { Bug, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GameFrame, ResultPanel, Stat } from './GameFrame'
 import { readBest, saveBest } from './scores'
+import { useT } from '@/i18n'
 
 /**
  * Bug Hunt: bugs surface in random modules; squash them before they ship.
@@ -23,6 +24,8 @@ type Status = 'idle' | 'running' | 'done'
 let uid = 0
 
 export default function BugHunt() {
+  const t = useT()
+  const G = t.games.bugs
   const [cells, setCells] = useState<(Spawn | null)[]>(() => Array(CELLS).fill(null))
   const [status, setStatus] = useState<Status>('idle')
   const [score, setScore] = useState(0)
@@ -138,24 +141,24 @@ export default function BugHunt() {
 
   return (
     <GameFrame
-      title="bug-hunt.exe · 30s"
+      title={G.title}
       hud={
         <>
-          <Stat label="time" value={`${timeLeft}s`} accent={status === 'running'} />
-          <Stat label="score" value={score} />
-          <Stat label="combo" value={multiplier > 1 ? `x${multiplier}` : combo} />
-          <Stat label="best" value={best ?? '—'} />
+          <Stat label={t.games.time} value={`${timeLeft}s`} accent={status === 'running'} />
+          <Stat label={G.score} value={score} />
+          <Stat label={G.combo} value={multiplier > 1 ? `x${multiplier}` : combo} />
+          <Stat label={t.games.best} value={best ?? '—'} />
         </>
       }
-      footer="Tap bugs before they ship (+10, combos multiply). Don't touch green checks: those are working features (−15)."
+      footer={G.footer}
     >
       {status === 'done' ? (
         <ResultPanel
-          title={`${score} points`}
+          title={G.result(score)}
           lines={[
-            ['squashed', squashed],
-            ['shipped', missed],
-            ['accuracy', `${accuracy}%`],
+            [G.squashed, squashed],
+            [G.shipped, missed],
+            [G.accuracy, `${accuracy}%`],
           ]}
           record={record}
           onRetry={start}
@@ -173,7 +176,7 @@ export default function BugHunt() {
                 }}
                 onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && hit(i)}
                 disabled={status !== 'running'}
-                aria-label={c ? (c.kind === 'bug' ? `Bug in module ${i + 1}` : `Working feature in module ${i + 1}`) : `Module ${i + 1}`}
+                aria-label={c ? (c.kind === 'bug' ? G.bugIn(i + 1) : G.featureIn(i + 1)) : G.module(i + 1)}
                 className={cn(
                   'relative grid aspect-square place-items-center rounded-xl border font-mono text-[0.6rem] transition-all duration-150 select-none',
                   !c && 'border-line bg-black/30 text-dim',
@@ -191,10 +194,10 @@ export default function BugHunt() {
           </div>
           {status === 'idle' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <p className="font-mono text-xs text-accent">production is on fire 🔥</p>
-              <p className="mt-1 text-lg font-semibold text-white">Squash the bugs before they ship</p>
+              <p className="font-mono text-xs text-accent">{G.fire}</p>
+              <p className="mt-1 text-lg font-semibold text-white">{G.headline}</p>
               <button onClick={start} className="mt-5 rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-black transition hover:shadow-[0_0_24px_-4px_var(--accent)]">
-                Start debugging
+                {G.start}
               </button>
             </div>
           )}

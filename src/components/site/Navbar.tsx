@@ -6,9 +6,13 @@ import { usePortfolio } from '@/data/PortfolioContext'
 import { navSections } from '@/data/sections'
 import { cn, pad } from '@/lib/utils'
 import { SectionLink } from './SectionLink'
+import { LanguageSwitcher } from './LanguageSwitcher'
+import { useLocalePath, useT } from '@/i18n'
 
 export function BrandMark({ className }: { className?: string }) {
   const { data } = usePortfolio()
+  const lp = useLocalePath()
+  const t = useT()
   const initials = data.profile.full_name
     .split(/\s+/)
     .map((w) => w[0])
@@ -17,9 +21,9 @@ export function BrandMark({ className }: { className?: string }) {
     .toLowerCase()
   return (
     <Link
-      to="/"
+      to={lp('/')}
       className={cn('group inline-flex items-center gap-2.5 font-mono', className)}
-      aria-label={`${data.profile.short_name.toLowerCase()}.dev, ${data.profile.full_name}, home`}
+      aria-label={`${data.profile.short_name.toLowerCase()}.dev, ${data.profile.full_name}, ${t.common.home}`}
     >
       <span aria-hidden className="relative grid h-8 w-8 place-items-center rounded-md border border-accent/40 bg-accent/[0.06] text-[0.8rem] font-semibold text-accent transition-shadow group-hover:glow">
         {initials}
@@ -38,7 +42,9 @@ export function Navbar() {
   const { data } = usePortfolio()
   const sections = navSections(data)
   const { pathname } = useLocation()
-  const onHome = pathname === '/'
+  const t = useT()
+  const lp = useLocalePath()
+  const onHome = pathname === lp('/')
   const [active, setActive] = useState('home')
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
@@ -120,15 +126,16 @@ export function Navbar() {
                 <span className="absolute inset-0 animate-pulse-ring rounded-full bg-accent" />
                 <span className="relative h-1.5 w-1.5 rounded-full bg-accent" />
               </span>
-              available
+              {t.common.available}
             </span>
           )}
+          <LanguageSwitcher />
           <button
             className="grid h-10 w-10 place-items-center rounded-lg text-fg hover:bg-white/5 md:hidden"
             onClick={() => setOpen((o) => !o)}
             aria-expanded={open}
             aria-controls="mobile-nav"
-            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-label={open ? t.common.closeMenu : t.common.openMenu}
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>

@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { dict, localeFromPath } from '@/i18n'
 
 const RELOAD_FLAG = 'az-chunk-reload'
 
@@ -46,12 +47,13 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (!this.state.error) return this.props.children
+    const t = dict(localeFromPath(typeof window === 'undefined' ? '/' : window.location.pathname)).error
     return (
       <main role="alert" className="flex min-h-screen items-center justify-center px-6">
         <div className="glass hud max-w-md rounded-2xl p-8 text-center">
-          <p className="font-mono text-xs tracking-[0.2em] text-amber-300 uppercase">runtime error</p>
-          <h1 className="mt-3 text-xl font-semibold text-white">Something went wrong loading the {this.props.area ?? 'page'}</h1>
-          <p className="mt-2 text-sm text-muted">This is usually fixed by reloading. If it keeps happening, please try again later.</p>
+          <p className="font-mono text-xs tracking-[0.2em] text-amber-300 uppercase">{t.eyebrow}</p>
+          <h1 className="mt-3 text-xl font-semibold text-white">{t.title}</h1>
+          <p className="mt-2 text-sm text-muted">{t.hint}</p>
           <div className="mt-6 flex justify-center gap-3">
             <button
               onClick={() => {
@@ -64,10 +66,10 @@ export class ErrorBoundary extends Component<Props, State> {
               }}
               className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-black"
             >
-              Reload
+              {t.reload}
             </button>
             <a href="/" className="rounded-lg border border-line-strong px-4 py-2 text-sm text-fg">
-              Home
+              {t.home}
             </a>
           </div>
         </div>

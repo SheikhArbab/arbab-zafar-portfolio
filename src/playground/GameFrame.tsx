@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/i18n'
 
 export function Stat({ label, value, accent }: { label: string; value: ReactNode; accent?: boolean }) {
   return (
@@ -27,9 +28,10 @@ export function GameFrame({ title, hud, children, footer }: { title: string; hud
 }
 
 export function ResultPanel({ title, lines, record, onRetry }: { title: string; lines: [string, ReactNode][]; record: boolean; onRetry: () => void }) {
+  const t = useT()
   return (
     <div className="flex flex-col items-center py-6 text-center" role="status">
-      <p className="font-mono text-xs text-accent">{record ? '★ new personal best' : 'process exited with code 0'}</p>
+      <p className="font-mono text-xs text-accent">{record ? t.games.newBest : t.games.exited}</p>
       <p className="mt-2 text-2xl font-semibold text-white">{title}</p>
       <dl className="mt-6 grid w-full max-w-md grid-cols-3 gap-3">
         {lines.map(([k, v]) => (
@@ -40,7 +42,7 @@ export function ResultPanel({ title, lines, record, onRetry }: { title: string; 
         ))}
       </dl>
       <button onClick={onRetry} className="mt-7 rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-black transition hover:shadow-[0_0_24px_-4px_var(--accent)]">
-        Play again
+        {t.games.playAgain}
       </button>
     </div>
   )

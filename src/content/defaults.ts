@@ -9,6 +9,7 @@ import type {
   Skill,
   SkillCategory,
 } from '../types/content.ts'
+import { deCategories, deExperiences, deProfile, deProjects, deSettings } from './de.ts'
 
 /**
  * Default content.
@@ -120,6 +121,7 @@ export const defaultSettings: SiteSettings = {
   maintenance_mode: false,
   maintenance_message: 'The portfolio is being upgraded. Please check back shortly.',
   content: defaultContent,
+  translations: { de: deSettings },
 }
 
 export const defaultProfile: Profile = {
@@ -194,6 +196,7 @@ export const defaultProfile: Profile = {
       'Next milestone: B1 → B2',
     ],
   },
+  translations: { de: deProfile },
 }
 
 // Fixed IDs so the seed file and skills can reference categories.
@@ -213,7 +216,7 @@ export const defaultCategories: SkillCategory[] = [
   { id: CAT.databases, name: 'Databases', slug: 'databases', description: 'Data & storage', sort_order: 3, is_visible: true },
   { id: CAT.state, name: 'State & UI tooling', slug: 'state-ui', description: 'State management & styling', sort_order: 4, is_visible: true },
   { id: CAT.other, name: 'Platform & workflow', slug: 'platform', description: 'Delivery & collaboration', sort_order: 5, is_visible: true },
-]
+].map((c) => ({ ...c, translations: deCategories[c.slug] ? { de: deCategories[c.slug] } : {} }))
 
 const skillRows: [string, string, string, boolean?][] = [
   // name, category, simple-icons slug, featured
@@ -286,6 +289,7 @@ const exp = (
   logo_url: null,
   sort_order: i,
   is_visible: true,
+  translations: deExperiences[i] ? { de: deExperiences[i] } : {},
 })
 
 export const defaultExperiences: Experience[] = [
@@ -509,7 +513,7 @@ export const defaultProjects: Project[] = [
     // Unfinished (only sign-up is implemented), so it starts unpublished.
     is_published: false,
   }),
-].map((p, i) => ({ ...p, sort_order: i }))
+].map((p, i) => ({ ...p, sort_order: i, translations: deProjects[p.slug] ? { de: deProjects[p.slug] } : {} }))
 
 export const defaultEducation: Education[] = []
 

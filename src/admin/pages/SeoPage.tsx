@@ -23,6 +23,7 @@ const groups: FieldGroup[] = [
   {
     title: 'Search engines',
     description: 'Applied to the home page; project pages use their own SEO fields with these as fallback.',
+    translate: ['seo_title', 'seo_description', 'seo_keywords'],
     fields: [
       { name: 'site_name', label: 'Site name', type: 'text', required: true },
       { name: 'site_url', label: 'Site URL (canonical)', type: 'url', required: true, help: 'Your production domain, without a trailing slash.' },

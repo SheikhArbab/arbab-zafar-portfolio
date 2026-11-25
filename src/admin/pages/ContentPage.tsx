@@ -12,7 +12,10 @@ const section = (key: string, title: string, extra: FieldDef[] = []): FieldGroup
   ],
 })
 
-const groups: FieldGroup[] = [
+/** Every text on this page has a German version. */
+const translateAll = (g: FieldGroup): FieldGroup => ({ ...g, translate: g.fields.map((f) => f.name) })
+
+const groups: FieldGroup[] = ([
   {
     title: 'Navigation labels',
     fields: (['home', 'about', 'experience', 'skills', 'projects', 'education', 'contact'] as const).map((k) => ({
@@ -48,7 +51,7 @@ const groups: FieldGroup[] = [
       { name: 'content.footer.text', label: 'Copyright text', type: 'text', help: '“© YEAR Name.” is prepended automatically.', max: 120 },
     ],
   },
-]
+] as FieldGroup[]).map(translateAll)
 
 export default function ContentPage() {
   return (

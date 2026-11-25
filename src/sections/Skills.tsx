@@ -8,6 +8,7 @@ import { SpotlightCard } from '@/components/site/SpotlightCard'
 import { ProficiencyMeter, SkillIcon } from '@/components/site/SkillIcon'
 import { ThreeSlot } from '@/components/three/ThreeSlot'
 import { categoryColors } from '@/lib/palette'
+import { useT } from '@/i18n'
 
 const SkillsOrbit = lazy(() => import('@/components/three/SkillsOrbit'))
 
@@ -35,13 +36,14 @@ function OrbitFallback({ names, colors }: { names: string[]; colors: string[] })
 export function Skills({ index }: { index: number }) {
   const { data } = usePortfolio()
   const { skills, categories } = data
+  const t = useT()
   const copy = data.settings.content.skills
   const featured = skills.filter((s) => s.is_featured)
   const groups = categories
     .map((c) => ({ cat: c, items: skills.filter((s) => s.category_id === c.id) }))
     .filter((g) => g.items.length)
   const uncategorized = skills.filter((s) => !s.category_id)
-  if (uncategorized.length) groups.push({ cat: { id: 'other', name: 'Other', slug: 'other', description: '', sort_order: 999, is_visible: true }, items: uncategorized })
+  if (uncategorized.length) groups.push({ cat: { id: 'other', name: t.skills.other, slug: 'other', description: '', sort_order: 999, is_visible: true }, items: uncategorized })
   const colors = categoryColors(groups.length, data.settings.accent_primary, data.settings.accent_secondary)
   const orbitNodes = useMemo(
     () => groups.flatMap((g, cat) => g.items.map((s) => ({ id: s.id, name: s.name, cat, featured: s.is_featured }))),
@@ -59,7 +61,7 @@ export function Skills({ index }: { index: number }) {
           <Reveal className="mb-6">
             <div className="glass hud relative overflow-hidden rounded-2xl p-5 md:p-6">
               <p className="mb-4 font-mono text-[0.68rem] tracking-[0.18em] text-dim uppercase">
-                <span className="text-accent">●</span> core stack
+                <span className="text-accent">●</span> {t.skills.coreStack}
               </p>
               <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8">
                 {featured.map((s, i) => (
@@ -87,9 +89,9 @@ export function Skills({ index }: { index: number }) {
             <div className="relative overflow-hidden rounded-2xl border border-line bg-black/20">
               <div className="pointer-events-none absolute top-4 left-5 z-10">
                 <p className="font-mono text-[0.68rem] tracking-[0.18em] text-dim uppercase">
-                  <span className="text-accent-2">◆</span> interactive stack map
+                  <span className="text-accent-2">◆</span> {t.skills.stackMap}
                 </p>
-                <p className="mt-1 font-mono text-[0.65rem] text-dim">drag to rotate · hover a node</p>
+                <p className="mt-1 font-mono text-[0.65rem] text-dim">{t.skills.dragHint}</p>
               </div>
               <ul className="pointer-events-none absolute top-4 right-5 z-10 flex max-w-[55%] flex-wrap justify-end gap-x-4 gap-y-1.5">
                 {groups.map(({ cat }, i) => (

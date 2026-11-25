@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'rea
 import { m } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { usePortfolio } from '@/data/PortfolioContext'
+import { useLocalePath, useT } from '@/i18n'
 import { cn } from '@/lib/utils'
 
 /**
@@ -33,15 +34,18 @@ export function Terminal({ className, animate = true }: { className?: string; an
     body.current?.scrollTo({ top: body.current.scrollHeight, behavior: 'smooth' })
   }, [lines])
 
+  const t = useT()
+  const T = t.terminal
+  const lp = useLocalePath()
   const print = (...content: ReactNode[]) =>
     setLines((l) => [...l, ...content.map((c) => ({ id: next(), kind: 'out' as const, content: c }))].slice(-60))
 
   const commands: Record<string, { help: string; run: () => void }> = {
     help: {
-      help: 'list available commands',
+      help: T.help.help,
       run: () =>
         print(
-          <span className="text-muted">available commands:</span>,
+          <span className="text-muted">{T.available}</span>,
           ...Object.entries(commands).map(([k, c]) => (
             <span key={k}>
               <span className="text-accent">{k.padEnd(11, ' ')}</span>
@@ -51,61 +55,67 @@ export function Terminal({ className, animate = true }: { className?: string; an
         ),
     },
     whoami: {
-      help: 'who is behind this site',
+      help: T.help.whoami,
       run: () => print(`${profile.full_name}, ${profile.title}`, <span className="text-muted">{profile.location}</span>),
     },
     skills: {
-      help: 'print the tech stack',
+      help: T.help.skills,
       run: () => {
-        print(skills.slice(0, 18).map((s) => s.name).join(' · ') || 'no skills published yet')
+        print(skills.slice(0, 18).map((s) => s.name).join(' · ') || T.noSkills)
         scrollToId('skills')
       },
     },
     projects: {
-      help: 'list published projects',
+      help: T.help.projects,
       run: () => {
-        print(...(projects.length ? projects.slice(0, 8).map((p) => `▸ ${p.title}`) : ['no projects published yet']))
+        print(...(projects.length ? projects.slice(0, 8).map((p) => `▸ ${p.title}`) : [T.noProjects]))
         scrollToId('projects')
       },
     },
-    experience: { help: 'jump to experience', run: () => (print('→ /experience'), scrollToId('experience')) },
-    contact: {
-      help: 'open a channel',
+    experience: {
+      help: T.help.experience,
       run: () => {
-        print(profile.email ? `mail → ${profile.email}` : '→ opening contact form')
+        print('→ /experience')
+        scrollToId('experience')
+      },
+    },
+    contact: {
+      help: T.help.contact,
+      run: () => {
+        print(profile.email ? `mail → ${profile.email}` : T.openingContact)
         scrollToId('contact')
       },
     },
     cv: {
-      help: 'download my CV',
+      help: T.help.cv,
       run: () => {
         const cvs = documents.filter((d) => d.kind === 'cv_en' || d.kind === 'cv_de')
-        if (!cvs.length) return print('cv not uploaded yet')
+        if (!cvs.length) return print(T.noCv)
         print(
           ...cvs.map((d) => (
             <a key={d.id} className="text-accent-2 underline underline-offset-2" href={d.file_url} target="_blank" rel="noopener noreferrer">
-              {d.kind === 'cv_de' ? 'Lebenslauf (DE)' : 'CV (EN)'}: {d.file_name || 'download'}
+              {d.kind === 'cv_de' ? T.cvDe : T.cvEn}: {d.file_name || 'download'}
             </a>
           )),
         )
       },
     },
     deutsch: {
-      help: 'sprachstatus',
-      run: () => print(`${profile.german.badge}: Niveau ${profile.german.level} → Ziel ${profile.german.goal}`),
+      help: T.help.deutsch,
+      run: () => print(T.deutsch(profile.german.badge, profile.german.level, profile.german.goal)),
     },
     play: {
-      help: 'play a mini game: play [typing|bugs|memory]',
+      help: T.help.play,
       run: () => {
         const arg = value.trim().toLowerCase().split(/\s+/)[1]
         const game = arg === 'bugs' || arg === 'memory' ? arg : 'typing'
-        if (!settings.sections.playground) return print('playground is offline right now')
-        print(`launching ${game}…`)
-        setTimeout(() => navigate(`/playground?game=${game}`), 350)
+        if (!settings.sections.playground) return print(T.playgroundOffline)
+        print(T.launching(game))
+        setTimeout(() => navigate(lp(`/playground?game=${game}`)), 350)
       },
     },
-    sudo: { help: 'try it', run: () => print(<span className="text-amber-300">permission denied: nice try 🙂</span>) },
-    clear: { help: 'clear the screen', run: () => setLines([]) },
+    sudo: { help: T.help.sudo, run: () => print(<span className="text-amber-300">{T.sudo}</span>) },
+    clear: { help: T.help.clear, run: () => setLines([]) },
   }
 
   const submit = (e: FormEvent) => {
@@ -119,7 +129,7 @@ export function Terminal({ className, animate = true }: { className?: string; an
     const key = cmd.split(/\s+/)[0]
     const handler = commands[key]
     if (handler) handler.run()
-    else print(<span className="text-red-300">command not found: {key}. try `help`</span>)
+    else print(<span className="text-red-300">{T.notFound(key)}</span>)
   }
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -169,7 +179,7 @@ export function Terminal({ className, animate = true }: { className?: string; an
           </m.p>
         ))}
         <p className="text-dim">
-          <span className="text-muted">type</span> <span className="text-accent">help</span> <span className="text-muted">to explore</span>
+          <span className="text-muted">{T.hint[0]}</span> <span className="text-accent">{T.hint[1]}</span> <span className="text-muted">{T.hint[2]}</span>
         </p>
         {lines.map((l) => (
           <p key={l.id} className={cn('break-words whitespace-pre-wrap', l.kind === 'in' ? 'text-fg' : 'text-muted')}>
@@ -180,7 +190,7 @@ export function Terminal({ className, animate = true }: { className?: string; an
         <form onSubmit={submit} className="flex items-center gap-2">
           <span className="text-accent">❯</span>
           <label htmlFor="term-input" className="sr-only">
-            Terminal command
+            {T.label}
           </label>
           <input
             id="term-input"

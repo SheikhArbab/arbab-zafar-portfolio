@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { usePortfolio } from '@/data/PortfolioContext'
 import { ThreeSlot } from '@/components/three/ThreeSlot'
+import { useLocale, useT } from '@/i18n'
 
 const GlobeScene = lazy(() => import('@/components/three/GlobeScene'))
 
@@ -24,12 +25,14 @@ const CEFR = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
 /** Deliberately compact: a personal note, not a headline section. */
 export function German() {
   const { data } = usePortfolio()
+  const t = useT()
+  const locale = useLocale()
   const g = data.profile.german
   const cur = CEFR.indexOf(g.level.toUpperCase())
   const goal = CEFR.indexOf(g.goal.toUpperCase())
 
   return (
-    <section aria-label="German language learning" lang="de" className="relative py-10">
+    <section aria-label={t.german.sectionLabel} lang="de" className="relative py-10">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <Reveal>
           <div className="relative overflow-hidden rounded-2xl border border-line bg-gradient-to-r from-white/[0.02] to-transparent p-5 md:p-6">
@@ -44,7 +47,7 @@ export function German() {
                 <h2 className="mt-1.5 text-lg font-semibold text-white">{g.headline}</h2>
                 {g.note && <p className="mt-1 max-w-xl text-sm text-muted">{g.note}</p>}
                 {g.points.length > 0 && (
-                  <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted" lang="en">
+                  <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted" lang={locale}>
                     {g.points.map((p, i) => (
                       <li key={i} className="flex items-center gap-2">
                         <span className="h-1 w-1 rounded-full bg-accent-2" />
@@ -70,9 +73,9 @@ export function German() {
                 </div>
                 <div>
                 <p className="mb-2 font-mono text-[0.62rem] tracking-widest text-dim uppercase">
-                  Niveau {g.level} → Ziel {g.goal}
+                  {t.german.level(g.level, g.goal)}
                 </p>
-                <ol className="flex gap-1" aria-label={`Current level ${g.level}, goal ${g.goal}`}>
+                <ol className="flex gap-1" aria-label={t.german.levelAria(g.level, g.goal)}>
                   {CEFR.map((l, i) => (
                     <li
                       key={l}

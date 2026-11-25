@@ -5,6 +5,9 @@ export type AnimationLevel = 'full' | 'reduced' | 'off'
 export type EducationKind = 'education' | 'course' | 'certification' | 'training'
 export type MessageStatus = 'unread' | 'read' | 'archived'
 export type DocumentKind = 'cv_en' | 'cv_de' | 'other'
+/** Per-language overrides: { de: { <field>: value } }. Missing fields fall back to English. */
+export type Translations = Partial<Record<'de', Record<string, unknown>>>
+
 export type ProjectLinksMode = 'case_study' | 'cards' | 'hidden'
 
 export interface KeyValue {
@@ -40,6 +43,7 @@ export interface GermanInfo {
 }
 
 export interface Profile {
+  translations?: Translations
   id: number
   full_name: string
   short_name: string
@@ -89,6 +93,7 @@ export interface SiteContent {
 export type SectionKey = 'about' | 'experience' | 'skills' | 'projects' | 'education' | 'german' | 'playground' | 'contact'
 
 export interface SiteSettings {
+  translations?: Translations
   id: number
   site_name: string
   site_url: string
@@ -112,6 +117,7 @@ export interface SiteSettings {
 }
 
 export interface Experience {
+  translations?: Translations
   id: string
   title: string
   company: string
@@ -132,6 +138,7 @@ export interface Experience {
 }
 
 export interface SkillCategory {
+  translations?: Translations
   id: string
   name: string
   slug: string
@@ -164,6 +171,7 @@ export interface ProjectImage {
 }
 
 export interface Project {
+  translations?: Translations
   id: string
   title: string
   slug: string
@@ -193,6 +201,7 @@ export interface Project {
 }
 
 export interface Education {
+  translations?: Translations
   id: string
   kind: EducationKind
   title: string
@@ -207,6 +216,7 @@ export interface Education {
 }
 
 export interface DocumentFile {
+  translations?: Translations
   id: string
   kind: DocumentKind
   title: string

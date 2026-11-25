@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom'
 import { ArrowUpRight, FolderGit2 } from 'lucide-react'
 import { cn, liveLinkLabel, safeUrl } from '@/lib/utils'
+import { useLocalePath, useT } from '@/i18n'
 import { Tag } from '@/components/ui/Tag'
 import { GithubIcon } from '@/components/ui/BrandIcons'
 import type { Project } from '@/types/content'
 
 /** Generated cover for projects that don't have a screenshot yet. */
 function ProjectCover({ project }: { project: Project }) {
+  const t = useT()
   const initials = project.title
     .split(/\s+/)
     .filter((w) => /^[A-Za-z0-9]/.test(w))
@@ -18,7 +20,7 @@ function ProjectCover({ project }: { project: Project }) {
       <div className="absolute top-1/4 right-1/4 h-2/3 w-2/3 rounded-full bg-accent/10 blur-3xl" />
       <div className="absolute -bottom-1/3 -left-1/4 h-2/3 w-2/3 rounded-full bg-accent-2/10 blur-3xl" />
       <div className="absolute inset-6 rounded-xl border border-line" />
-      <span className="absolute top-9 left-9 font-mono text-[0.62rem] tracking-[0.2em] text-dim uppercase">{project.category || 'project'}</span>
+      <span className="absolute top-9 left-9 font-mono text-[0.62rem] tracking-[0.2em] text-dim uppercase">{project.category || t.projects.project}</span>
       <span className="absolute top-9 right-9 flex gap-1">
         <span className="h-1.5 w-1.5 rounded-full bg-accent/70" />
         <span className="h-1.5 w-1.5 rounded-full bg-white/15" />
@@ -34,12 +36,13 @@ function ProjectCover({ project }: { project: Project }) {
 }
 
 export function ProjectThumb({ project, className, eager }: { project: Project; className?: string; eager?: boolean }) {
+  const t = useT()
   return (
     <div className={cn('relative overflow-hidden bg-elev', className)}>
       {project.thumbnail_url ? (
         <img
           src={project.thumbnail_url}
-          alt={`${project.title} screenshot`}
+          alt={t.projects.screenshot(project.title)}
           loading={eager ? 'eager' : 'lazy'}
           decoding="async"
           className="h-full w-full object-cover object-top transition duration-700 ease-out group-hover:scale-[1.04]"
@@ -56,6 +59,7 @@ export function ProjectThumb({ project, className, eager }: { project: Project; 
 }
 
 export function ProjectLinks({ project, compact }: { project: Project; compact?: boolean }) {
+  const t = useT()
   const live = safeUrl(project.live_url)
   const repo = safeUrl(project.repo_url)
   return (
@@ -66,9 +70,9 @@ export function ProjectLinks({ project, compact }: { project: Project; compact?:
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 rounded-md border border-accent/30 bg-accent/[0.07] px-2.5 py-1.5 font-mono text-[0.7rem] text-accent transition-colors hover:bg-accent/15"
-          aria-label={`${liveLinkLabel(live)}: ${project.title}`}
+          aria-label={`${liveLinkLabel(live, t.links)}: ${project.title}`}
         >
-          {liveLinkLabel(live).replace('View on ', '').replace('Live demo', 'live').toLowerCase()} <ArrowUpRight className="h-3 w-3" />
+          {/linkedin\.com/i.test(live) ? 'LinkedIn' : t.projects.live} <ArrowUpRight className="h-3 w-3" />
         </a>
       )}
       {repo && (
@@ -77,9 +81,9 @@ export function ProjectLinks({ project, compact }: { project: Project; compact?:
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 rounded-md border border-line-strong px-2.5 py-1.5 font-mono text-[0.7rem] text-muted transition-colors hover:border-fg/40 hover:text-fg"
-          aria-label={`Source code of ${project.title}`}
+          aria-label={`${t.links.sourceCode}: ${project.title}`}
         >
-          <GithubIcon className="h-3 w-3" /> {!compact && 'code'}
+          <GithubIcon className="h-3 w-3" /> {!compact && t.projects.code}
         </a>
       )}
     </div>
@@ -96,6 +100,8 @@ interface CardProps {
 }
 
 export function ProjectCard({ project, index, large, horizontal, showLinks = false }: CardProps) {
+  const t = useT()
+  const lp = useLocalePath()
   return (
     <article
       className={cn(
@@ -114,13 +120,13 @@ export function ProjectCard({ project, index, large, horizontal, showLinks = fal
       <div className={cn('relative flex flex-col p-5 md:p-6', large ? 'flex-none' : 'flex-1', horizontal && 'lg:justify-center lg:p-8')}>
         <div className="mb-3 flex items-center justify-between gap-3 font-mono text-[0.65rem] tracking-wider text-dim uppercase">
           <span>
-            <span className="text-accent">{String(index + 1).padStart(2, '0')}</span> · {project.category || 'project'}
+            <span className="text-accent">{String(index + 1).padStart(2, '0')}</span> · {project.category || t.projects.project}
           </span>
-          {project.status && <span className="text-accent-2">{project.status}</span>}
+          {project.status && <span className="text-accent-2">{t.projects.status[project.status] ?? project.status}</span>}
         </div>
         <h3 className={cn('font-semibold tracking-tight text-white', large || horizontal ? 'text-2xl md:text-3xl' : 'text-xl')}>
           {/* Stretched link: whole card opens the case study */}
-          <Link to={`/projects/${project.slug}`} className="after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-accent">
+          <Link to={lp(`/projects/${project.slug}`)} className="after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-accent">
             {project.title}
           </Link>
         </h3>
@@ -135,7 +141,7 @@ export function ProjectCard({ project, index, large, horizontal, showLinks = fal
         <div className={cn('flex items-center justify-between gap-3 pt-6', !horizontal && 'mt-auto')}>
           {showLinks ? <ProjectLinks project={project} /> : <span />}
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-accent/30 bg-accent/[0.06] px-3 py-1.5 font-mono text-[0.7rem] text-accent transition-colors duration-300 group-hover:bg-accent group-hover:text-black">
-            read case study <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            {t.projects.readCaseStudy} <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </span>
         </div>
       </div>

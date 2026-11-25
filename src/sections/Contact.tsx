@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button'
 import { FieldError, Input, Label, Textarea } from '@/components/ui/Field'
 import { SocialIcon, socialHref } from '@/components/ui/BrandIcons'
 import { Spinner } from '@/components/ui/Spinner'
+import { useLocale, useT } from '@/i18n'
 
 type Status = 'idle' | 'sending' | 'success' | 'error'
 type Errors = ContactErrors
@@ -54,6 +55,9 @@ function useTurnstile() {
 export function Contact({ index }: { index: number }) {
   const { data } = usePortfolio()
   const { profile, settings, documents } = data
+  const t = useT()
+  const T = t.contact
+  const locale = useLocale()
   const copy = settings.content.contact
   const [values, setValues] = useState<ContactInput>({ name: '', email: '', subject: '', message: '' })
   const [honeypot, setHoneypot] = useState('')
@@ -65,6 +69,7 @@ export function Contact({ index }: { index: number }) {
 
   const socials = profile.socials.filter((s) => s.visible && safeUrl(socialHref(s.platform, s.platform === 'email' ? s.url || profile.email : s.url)))
   const cvs = documents.filter((d) => (d.kind === 'cv_en' || d.kind === 'cv_de') && safeUrl(d.file_url))
+    .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === (locale === 'de' ? 'cv_de' : 'cv_en') ? -1 : 1))
 
   const set = (k: keyof ContactInput) => (e: { target: { value: string } }) => {
     setValues((v) => ({ ...v, [k]: e.target.value }))
@@ -76,14 +81,19 @@ export function Contact({ index }: { index: number }) {
     const clean = normalizeContact(values)
     const errs = validateContact(clean)
     if (Object.keys(errs).length) {
-      setErrors(errs)
+      // Show the validation messages in the page's language (same rules as the server).
+      const localized: Errors = {}
+      for (const k of Object.keys(errs) as (keyof ContactInput)[]) {
+        localized[k] = /line break/i.test(errs[k] ?? '') ? T.errors.linebreak : T.errors[k]
+      }
+      setErrors(localized)
       // Focus the first invalid field in form order.
       const first = (['name', 'email', 'subject', 'message'] as const).find((k) => errs[k])
       if (first) document.getElementById(`contact-${first}`)?.focus()
       return
     }
     if (turnstile.enabled && !turnstile.token) {
-      setServerError('Please complete the verification challenge.')
+      setServerError(T.verify)
       setStatus('error')
       return
     }
@@ -104,7 +114,7 @@ export function Contact({ index }: { index: number }) {
       setValues({ name: '', email: '', subject: '', message: '' })
       turnstile.reset()
     } catch (err) {
-      setServerError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setServerError(err instanceof Error ? err.message : T.failed)
       setStatus('error')
       turnstile.reset()
     }
@@ -174,7 +184,7 @@ export function Contact({ index }: { index: number }) {
                     className="inline-flex items-center gap-2 rounded-lg border border-line-strong px-3 py-2 font-mono text-xs text-fg hover:border-accent/50 hover:text-accent"
                   >
                     <Download className="h-3.5 w-3.5" />
-                    {d.kind === 'cv_de' ? 'Lebenslauf (DE)' : 'Resume (EN)'}
+                    {d.kind === 'cv_de' ? T.resumeDe : T.resumeEn}
                   </a>
                 ))}
               </div>
@@ -185,9 +195,9 @@ export function Contact({ index }: { index: number }) {
             <div className="glass hud relative overflow-hidden rounded-2xl">
               <div className="flex items-center justify-between border-b border-line px-5 py-3 font-mono text-[0.7rem] text-dim">
                 <span>
-                  <span className="text-accent">●</span> secure-channel://transmit
+                  <span className="text-accent">●</span> {T.channel}
                 </span>
-                <span>tls · rate-limited</span>
+                <span>{T.channelMeta}</span>
               </div>
 
               <AnimatePresence mode="wait">
@@ -203,7 +213,7 @@ export function Contact({ index }: { index: number }) {
                     role="status"
                   >
                     <CheckCircle2 className="h-12 w-12 text-accent" aria-hidden />
-                    <p className="mt-5 font-mono text-sm text-accent">200 OK · transmission complete</p>
+                    <p className="mt-5 font-mono text-sm text-accent">{T.success}</p>
                     <p className="mt-2 max-w-sm text-muted">{copy.success_message}</p>
                     <Button variant="outline" className="mt-8" onClick={() => {
                         setStatus('idle')
@@ -211,31 +221,31 @@ export function Contact({ index }: { index: number }) {
                           document.getElementById('contact-name')?.focus()
                         }, 50)
                       }}>
-                      Send another message
+                      {T.sendAnother}
                     </Button>
                   </m.div>
                 ) : (
                   <m.form key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onSubmit={submit} noValidate className="space-y-5 p-5 md:p-7">
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                       <div>
-                        <Label htmlFor="contact-name">Name</Label>
-                        <Input {...field('name')} autoComplete="name" placeholder="Your name" maxLength={100} />
+                        <Label htmlFor="contact-name">{T.name}</Label>
+                        <Input {...field('name')} autoComplete="name" placeholder={T.namePh} maxLength={100} />
                         <FieldError>{errors.name && <span id="contact-name-err">{errors.name}</span>}</FieldError>
                       </div>
                       <div>
-                        <Label htmlFor="contact-email">Email</Label>
-                        <Input {...field('email')} type="email" autoComplete="email" placeholder="you@company.com" maxLength={200} />
+                        <Label htmlFor="contact-email">{T.email}</Label>
+                        <Input {...field('email')} type="email" autoComplete="email" placeholder={T.emailPh} maxLength={200} />
                         <FieldError>{errors.email && <span id="contact-email-err">{errors.email}</span>}</FieldError>
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="contact-subject">Subject</Label>
-                      <Input {...field('subject')} placeholder="Role, project or question" maxLength={150} />
+                      <Label htmlFor="contact-subject">{T.subject}</Label>
+                      <Input {...field('subject')} placeholder={T.subjectPh} maxLength={150} />
                       <FieldError>{errors.subject && <span id="contact-subject-err">{errors.subject}</span>}</FieldError>
                     </div>
                     <div>
-                      <Label htmlFor="contact-message">Message</Label>
-                      <Textarea {...field('message')} rows={6} placeholder="Tell me a little about what you have in mind…" maxLength={5000} />
+                      <Label htmlFor="contact-message">{T.message}</Label>
+                      <Textarea {...field('message')} rows={6} placeholder={T.messagePh} maxLength={5000} />
                       <div className="flex justify-between">
                         <FieldError>{errors.message && <span id="contact-message-err">{errors.message}</span>}</FieldError>
                         <span className="mt-1.5 ml-auto font-mono text-[0.65rem] text-dim">{[...values.message].length}/5000</span>
@@ -259,11 +269,11 @@ export function Contact({ index }: { index: number }) {
                     )}
 
                     <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
-                      <p className="font-mono text-[0.65rem] text-dim">Your details are only used to reply to you.</p>
+                      <p className="font-mono text-[0.65rem] text-dim">{T.privacy}</p>
                       <Button type="submit" size="lg" disabled={status === 'sending'} className={cn(status === 'sending' && 'opacity-80')}>
                         {status === 'sending' ? (
                           <>
-                            <Spinner /> Transmitting…
+                            <Spinner /> {T.transmitting}
                           </>
                         ) : (
                           <>

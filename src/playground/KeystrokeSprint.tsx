@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'reac
 import { cn } from '@/lib/utils'
 import { GameFrame, ResultPanel, Stat } from './GameFrame'
 import { readBest, saveBest } from './scores'
+import { useT } from '@/i18n'
 
 /** Keystroke Sprint: type real developer one-liners against a 30-second clock. */
 
@@ -42,6 +43,8 @@ function shuffled<T>(arr: T[]) {
 type Status = 'idle' | 'running' | 'done'
 
 export default function KeystrokeSprint() {
+  const t = useT()
+  const G = t.games.typing
   const [queue, setQueue] = useState<string[]>(() => shuffled(SNIPPETS))
   const [line, setLine] = useState(0)
   const [typed, setTyped] = useState('')
@@ -139,24 +142,24 @@ export default function KeystrokeSprint() {
 
   return (
     <GameFrame
-      title="keystroke-sprint.sh · 30s"
+      title={G.title}
       hud={
         <>
-          <Stat label="time" value={`${timeLeft}s`} accent={status === 'running'} />
-          <Stat label="wpm" value={status === 'idle' ? '—' : wpm} />
-          <Stat label="accuracy" value={status === 'idle' ? '—' : `${accuracy}%`} />
-          <Stat label="best" value={best !== undefined ? `${best} wpm` : '—'} />
+          <Stat label={t.games.time} value={`${timeLeft}s`} accent={status === 'running'} />
+          <Stat label={G.wpm} value={status === 'idle' ? '—' : wpm} />
+          <Stat label={G.accuracy} value={status === 'idle' ? '—' : `${accuracy}%`} />
+          <Stat label={t.games.best} value={best !== undefined ? `${best} ${G.unitWpm}` : '—'} />
         </>
       }
-      footer="Type the line exactly, including symbols. The timer starts on your first keystroke. Paste is disabled."
+      footer={G.footer}
     >
       {status === 'done' ? (
         <ResultPanel
-          title={`${finalWpm} words per minute`}
+          title={G.result(finalWpm)}
           lines={[
-            ['lines', lines],
-            ['accuracy', `${accuracy}%`],
-            ['mistakes', errors],
+            [G.lines, lines],
+            [G.accuracy, `${accuracy}%`],
+            [G.mistakes, errors],
           ]}
           record={record}
           onRetry={reset}
@@ -164,8 +167,8 @@ export default function KeystrokeSprint() {
       ) : (
         <div>
           <div className="mb-2 flex items-center justify-between font-mono text-[0.65rem] text-dim">
-            <span>line {lines + 1}</span>
-            <span>{status === 'idle' ? 'start typing to begin' : 'go go go'}</span>
+            <span>{G.line(lines + 1)}</span>
+            <span>{status === 'idle' ? G.start : G.go}</span>
           </div>
           <div
             className="rounded-xl border border-line bg-black/40 px-4 py-5 font-mono text-base leading-relaxed break-all whitespace-pre-wrap sm:text-lg"
@@ -191,10 +194,10 @@ export default function KeystrokeSprint() {
             })}
           </div>
           <p className="mt-2 truncate font-mono text-xs text-dim" aria-hidden>
-            next: {queue[(line + 1) % queue.length]}
+            {G.next} {queue[(line + 1) % queue.length]}
           </p>
           <label htmlFor="sprint-input" className="sr-only">
-            Type this line: {target}
+            {G.label(target)}
           </label>
           <input
             id="sprint-input"
@@ -207,7 +210,7 @@ export default function KeystrokeSprint() {
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck={false}
-            placeholder="type here…"
+            placeholder={G.placeholder}
             className="mt-4 h-12 w-full rounded-lg border border-line-strong bg-black/30 px-4 font-mono text-fg placeholder:text-dim focus:border-accent/70 focus:outline-none"
           />
         </div>

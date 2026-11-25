@@ -35,20 +35,27 @@ export function paragraphs(text: string | null | undefined): string[] {
     .filter(Boolean)
 }
 
-const monthFmt = new Intl.DateTimeFormat('en', { month: 'short', year: 'numeric', timeZone: 'UTC' })
+const monthFmts = new Map<string, Intl.DateTimeFormat>()
 
-export function formatMonth(date: string | null | undefined) {
+export function formatMonth(date: string | null | undefined, locale = 'en-GB') {
   if (!date) return ''
   const d = new Date(date)
-  return Number.isNaN(d.getTime()) ? '' : monthFmt.format(d)
+  if (Number.isNaN(d.getTime())) return ''
+  let f = monthFmts.get(locale)
+  if (!f) {
+    f = new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric', timeZone: 'UTC' })
+    monthFmts.set(locale, f)
+  }
+  return f.format(d)
 }
 
-export function dateRange(start: string | null, end: string | null, current: boolean) {
-  const s = formatMonth(start)
-  const e = current ? 'Present' : formatMonth(end)
-  if (!s && !e) return current ? 'Present' : ''
+/** "Jan 2024 — Present" / "Jan. 2024 — heute". `present` is the localized word. */
+export function dateRange(start: string | null, end: string | null, current: boolean, locale = 'en-GB', present = 'Present') {
+  const s = formatMonth(start, locale)
+  const e = current ? present : formatMonth(end, locale)
+  if (!s && !e) return current ? present : ''
   if (!s) return e
-  return `${s} — ${e || 'Present'}`
+  return `${s} — ${e || present}`
 }
 
 export function formatBytes(bytes: number | null | undefined) {
@@ -69,10 +76,10 @@ export function pad(n: number, len = 2) {
 
 
 /** Human label for a project's "live" link based on where it points. */
-export function liveLinkLabel(url: string) {
-  if (/linkedin\.com/i.test(url)) return 'View on LinkedIn'
-  if (/apps\.apple\.com/i.test(url)) return 'App Store'
-  if (/play\.google\.com/i.test(url)) return 'Google Play'
-  if (/youtu\.?be/i.test(url)) return 'Watch demo'
-  return 'Live demo'
+export function liveLinkLabel(url: string, labels = { liveDemo: 'Live demo', linkedin: 'View on LinkedIn', appStore: 'App Store', googlePlay: 'Google Play', watchDemo: 'Watch demo' }) {
+  if (/linkedin\.com/i.test(url)) return labels.linkedin
+  if (/apps\.apple\.com/i.test(url)) return labels.appStore
+  if (/play\.google\.com/i.test(url)) return labels.googlePlay
+  if (/youtu\.?be/i.test(url)) return labels.watchDemo
+  return labels.liveDemo
 }

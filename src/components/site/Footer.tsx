@@ -5,11 +5,14 @@ import { navSections } from '@/data/sections'
 import { safeUrl } from '@/lib/utils'
 import { BrandMark } from './Navbar'
 import { SectionLink, scrollToTop } from './SectionLink'
+import { useLocalePath, useT } from '@/i18n'
 import { SocialIcon, socialHref } from '@/components/ui/BrandIcons'
 
 export function Footer() {
   const { data } = usePortfolio()
   const { profile, settings } = data
+  const t = useT()
+  const lp = useLocalePath()
   const year = new Date().getFullYear()
   // The Email entry may leave its URL empty and rely on the public profile email (same as Contact).
   const socials = profile.socials
@@ -37,8 +40,8 @@ export function Footer() {
             ))}
           </div>
         </div>
-        <nav aria-label="Footer">
-          <p className="mb-3 font-mono text-[0.7rem] tracking-[0.18em] text-dim uppercase">// index</p>
+        <nav aria-label={t.footer.nav}>
+          <p className="mb-3 font-mono text-[0.7rem] tracking-[0.18em] text-dim uppercase">{t.footer.index}</p>
           <ul className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
             {navSections(data).map((s) => (
               <li key={s.id}>
@@ -49,8 +52,8 @@ export function Footer() {
             ))}
             {settings.sections.playground && (
               <li>
-                <Link to="/playground" className="text-muted transition-colors hover:text-fg">
-                  Playground
+                <Link to={lp('/playground')} className="text-muted transition-colors hover:text-fg">
+                  {t.footer.playground}
                 </Link>
               </li>
             )}
@@ -64,7 +67,7 @@ export function Footer() {
             }}
             className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 font-mono text-xs text-muted hover:border-accent/50 hover:text-accent"
           >
-            <ArrowUp className="h-3.5 w-3.5" aria-hidden /> top
+            <ArrowUp className="h-3.5 w-3.5" aria-hidden /> {t.footer.top}
           </button>
         </div>
       </div>

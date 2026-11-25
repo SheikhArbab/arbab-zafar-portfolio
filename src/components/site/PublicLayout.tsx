@@ -3,6 +3,7 @@ import { MotionConfig } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import { usePortfolio } from '@/data/PortfolioContext'
 import { useMotionLevel } from '@/lib/motion'
+import { useT } from '@/i18n'
 import { Navbar } from './Navbar'
 import { Footer } from './Footer'
 
@@ -22,6 +23,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
   useAccentVars()
   const level = useMotionLevel(data.settings.animation_level)
   const { pathname, hash } = useLocation()
+  const t = useT()
   // New page without a section hash: start at the top (otherwise the old scroll offset carries over).
   useEffect(() => {
     if (!hash) window.scrollTo(0, 0)
@@ -30,7 +32,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <MotionConfig reducedMotion={level === 'full' ? 'never' : 'always'}>
       <a href="#main" className="sr-only z-[200] rounded-md bg-accent px-3 py-2 text-black focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
-        Skip to content
+        {t.common.skipToContent}
       </a>
       <div className="relative min-h-screen">
         {/* Global ambient backdrop */}

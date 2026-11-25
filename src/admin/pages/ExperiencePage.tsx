@@ -11,6 +11,7 @@ export default function ExperiencePage() {
         table="experiences"
         toRow={(d) => ({ ...d, end_date: d.is_current ? null : d.end_date })}
         singular="Role"
+        translatable={['title', 'location', 'description', 'responsibilities', 'achievements']}
         visibilityKey="is_visible"
         searchKeys={['title', 'company', 'location']}
         title={(r) => r.title}

@@ -3,12 +3,15 @@ import { m, useScroll, useSpring } from 'framer-motion'
 import { Briefcase, MapPin } from 'lucide-react'
 import { usePortfolio } from '@/data/PortfolioContext'
 import { cn, dateRange, pad } from '@/lib/utils'
+import { intlLocale, useLocale, useT } from '@/i18n'
 import { SectionHeading } from '@/components/site/SectionHeading'
 import { Reveal } from '@/components/site/Reveal'
 import { Tag } from '@/components/ui/Tag'
 
 export function Experience({ index }: { index: number }) {
   const { data } = usePortfolio()
+  const t = useT()
+  const locale = useLocale()
   const items = data.experiences
   const copy = data.settings.content.experience
   const track = useRef<HTMLOListElement>(null)
@@ -29,7 +32,7 @@ export function Experience({ index }: { index: number }) {
             className="absolute top-2 bottom-2 left-[7px] w-px origin-top bg-gradient-to-b from-accent via-accent-2 to-accent/0 shadow-[0_0_12px_var(--accent)] md:left-[calc(11rem+7px)]"
           />
           {items.map((job, i) => {
-            const range = dateRange(job.start_date, job.end_date, job.is_current)
+            const range = dateRange(job.start_date, job.end_date, job.is_current, intlLocale(locale), t.common.present)
             return (
               <Reveal as="li" key={job.id} className="relative grid grid-cols-1 gap-3 pb-12 pl-9 last:pb-0 md:grid-cols-[11rem_1fr] md:gap-10 md:pl-0">
                 <div className="font-mono text-xs md:pt-5 md:text-right md:pr-10">
@@ -55,13 +58,13 @@ export function Experience({ index }: { index: number }) {
                         <h3 className="text-lg font-semibold text-white">{job.title}</h3>
                         <p className="mt-0.5 text-sm text-muted">
                           <span className="text-fg">{job.company}</span>
-                          {job.employment_type && <span> · {job.employment_type}</span>}
+                          {job.employment_type && <span> · {t.experience.employment[job.employment_type] ?? job.employment_type}</span>}
                         </p>
                       </div>
                     </div>
                     {job.is_current && (
                       <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/[0.07] px-2.5 py-0.5 font-mono text-[0.65rem] text-accent">
-                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" /> current
+                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" /> {t.experience.current}
                       </span>
                     )}
                   </header>
@@ -84,7 +87,7 @@ export function Experience({ index }: { index: number }) {
                   {job.achievements.length > 0 && (
                     <div className="mt-4 rounded-lg border border-accent/15 bg-accent/[0.03] p-3">
                       <p className="mb-2 flex items-center gap-2 font-mono text-[0.65rem] tracking-widest text-accent uppercase">
-                        <Briefcase className="h-3 w-3" /> highlights
+                        <Briefcase className="h-3 w-3" /> {t.experience.highlights}
                       </p>
                       <ul className="space-y-1.5 text-sm text-fg">
                         {job.achievements.map((a, k) => (

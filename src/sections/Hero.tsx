@@ -9,6 +9,7 @@ import { Button, LinkButton } from '@/components/ui/Button'
 import { SocialIcon, socialHref } from '@/components/ui/BrandIcons'
 import { Terminal } from '@/components/site/Terminal'
 import { HeroVisual } from '@/components/three/HeroVisual'
+import { useLocale, useT } from '@/i18n'
 
 function Heading({ text, highlight }: { text: string; highlight: string }) {
   // Split heading into words; highlight the configured word/phrase. Each word reveals in sequence.
@@ -41,6 +42,8 @@ function Heading({ text, highlight }: { text: string; highlight: string }) {
 
 function CvMenu({ label }: { label: string }) {
   const { data } = usePortfolio()
+  const t = useT()
+  const locale = useLocale()
   const cvs = data.documents.filter((d) => (d.kind === 'cv_en' || d.kind === 'cv_de') && safeUrl(d.file_url))
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -77,7 +80,8 @@ function CvMenu({ label }: { label: string }) {
       {open && (
         <div role="menu" className="glass absolute top-full left-0 z-20 mt-2 w-56 rounded-lg p-1.5">
           {cvs
-            .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'cv_en' ? -1 : 1))
+            // The page's language first.
+            .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === (locale === 'de' ? 'cv_de' : 'cv_en') ? -1 : 1))
             .map((d) => (
               <a
                 key={d.id}
@@ -88,7 +92,7 @@ function CvMenu({ label }: { label: string }) {
                 onClick={() => setOpen(false)}
                 className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-fg hover:bg-white/5"
               >
-                {d.kind === 'cv_de' ? 'Lebenslauf · Deutsch' : 'Resume · English'}
+                {d.kind === 'cv_de' ? t.hero.lebenslauf : t.hero.resume}
                 <span className="font-mono text-[0.65rem] text-accent">{d.kind === 'cv_de' ? 'DE' : 'EN'}</span>
               </a>
             ))}
@@ -100,6 +104,7 @@ function CvMenu({ label }: { label: string }) {
 
 export function Hero() {
   const { data } = usePortfolio()
+  const t = useT()
   const { profile, settings } = data
   const level = useMotionLevel(settings.animation_level)
   const [mounted, setMounted] = useState(false)
@@ -111,7 +116,7 @@ export function Hero() {
   const c = settings.content.hero
 
   return (
-    <section id="home" aria-label="Introduction" className="relative isolate flex min-h-[100svh] items-center overflow-hidden pt-24 pb-16 lg:pt-28">
+    <section id="home" aria-label={t.hero.introduction} className="relative isolate flex min-h-[100svh] items-center overflow-hidden pt-24 pb-16 lg:pt-28">
       {/* Background grid + horizon glow */}
       <div aria-hidden className="bg-grid mask-radial absolute inset-0 -z-10 opacity-70" />
       <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-bg to-transparent" />
@@ -223,10 +228,10 @@ export function Hero() {
 
       <a
         href="#about"
-        aria-label="Scroll to about"
+        aria-label={t.hero.scrollToAbout}
         className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 font-mono text-[0.6rem] tracking-[0.3em] text-dim uppercase md:flex"
       >
-        scroll
+        {t.hero.scroll}
         <span className="relative h-9 w-px overflow-hidden bg-line-strong">
           <span className="absolute inset-x-0 top-0 h-1/2 animate-scan bg-accent" />
         </span>

@@ -7,6 +7,7 @@ import { SectionHeading } from '@/components/site/SectionHeading'
 import { Reveal } from '@/components/site/Reveal'
 import { ProjectCard } from '@/components/site/ProjectCard'
 import { Tilt } from '@/components/site/Tilt'
+import { useT } from '@/i18n'
 
 /** Bento spans that always fill complete rows, whatever the number of featured projects. */
 function bento(n: number, i: number): { className: string; large?: boolean; horizontal?: boolean } {
@@ -17,6 +18,8 @@ function bento(n: number, i: number): { className: string; large?: boolean; hori
   const rest = n - 3
   return rest === 1 ? { className: 'lg:col-span-6', horizontal: true } : { className: 'lg:col-span-3' }
 }
+
+const ALL = '__all'
 
 function EmptyState({ message }: { message: string }) {
   return (
@@ -29,20 +32,21 @@ function EmptyState({ message }: { message: string }) {
 
 export function Projects({ index }: { index: number }) {
   const { data } = usePortfolio()
+  const t = useT()
   const { projects, settings } = data
   const featured = projects.filter((p) => p.is_featured).slice(0, 5)
   const fCopy = settings.content.featured
   const aCopy = settings.content.projects
   const showLinks = settings.project_links === 'cards'
 
-  const categories = useMemo(() => ['All', ...Array.from(new Set(projects.map((p) => p.category).filter(Boolean)))], [projects])
-  const [cat, setCat] = useState('All')
+  const categories = useMemo(() => [ALL, ...Array.from(new Set(projects.map((p) => p.category).filter(Boolean)))], [projects])
+  const [cat, setCat] = useState(ALL)
   const [query, setQuery] = useState('')
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return projects.filter((p) => {
-      if (cat !== 'All' && p.category !== cat) return false
+      if (cat !== ALL && p.category !== cat) return false
       if (!q) return true
       return [p.title, p.short_description, p.category, ...p.technologies].join(' ').toLowerCase().includes(q)
     })
@@ -53,7 +57,7 @@ export function Projects({ index }: { index: number }) {
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <SectionHeading id="projects-title" index={index} eyebrow={fCopy.eyebrow} heading={fCopy.heading} description={fCopy.description} />
 
-        {projects.length === 0 && <EmptyState message="No projects published yet. New work is on the way." />}
+        {projects.length === 0 && <EmptyState message={t.projects.empty} />}
 
         {featured.length > 0 && (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-6">
@@ -81,18 +85,18 @@ export function Projects({ index }: { index: number }) {
               <div className="relative w-full md:w-72">
                 <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-dim" aria-hidden />
                 <label htmlFor="project-search" className="sr-only">
-                  Search projects
+                  {t.projects.search}
                 </label>
                 <input
                   id="project-search"
                   type="search"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="grep projects…"
+                  placeholder={t.projects.searchPlaceholder}
                   className="h-10 w-full rounded-lg border border-line-strong bg-black/30 pr-9 pl-9 font-mono text-sm text-fg placeholder:text-dim focus:border-accent/60 focus:outline-none"
                 />
                 {query && (
-                  <button onClick={() => setQuery('')} aria-label="Clear search" className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 text-dim hover:text-fg">
+                  <button onClick={() => setQuery('')} aria-label={t.projects.clearSearch} className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 text-dim hover:text-fg">
                     <X className="h-3.5 w-3.5" />
                   </button>
                 )}
@@ -100,7 +104,7 @@ export function Projects({ index }: { index: number }) {
             </div>
 
             {categories.length > 2 && (
-              <div role="tablist" aria-label="Filter projects by category" className="mb-8 flex flex-wrap gap-2">
+              <div role="tablist" aria-label={t.projects.filter} className="mb-8 flex flex-wrap gap-2">
                 {categories.map((c) => (
                   <button
                     key={c}
@@ -114,7 +118,7 @@ export function Projects({ index }: { index: number }) {
                   >
                     {cat === c && <m.span layoutId="proj-cat" className="absolute inset-0 rounded-lg bg-accent" transition={{ type: 'spring', damping: 30, stiffness: 400 }} />}
                     <span className="relative">
-                      {c} <span className="opacity-60">{c === 'All' ? projects.length : projects.filter((p) => p.category === c).length}</span>
+                      {c === ALL ? t.projects.all : c} <span className="opacity-60">{c === ALL ? projects.length : projects.filter((p) => p.category === c).length}</span>
                     </span>
                   </button>
                 ))}
@@ -122,7 +126,7 @@ export function Projects({ index }: { index: number }) {
             )}
 
             {filtered.length === 0 ? (
-              <EmptyState message={`no matches for "${query}"`} />
+              <EmptyState message={t.projects.noMatches(query)} />
             ) : (
               <m.ul layout className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <AnimatePresence mode="popLayout">

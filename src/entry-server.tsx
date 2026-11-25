@@ -9,6 +9,8 @@ import { fetchPortfolio } from './data/fetchPortfolio'
 import { defaultData } from './content/defaults'
 import { homeHead, playgroundHead, projectHead, renderHeadTags } from './seo/head'
 import { isSupabaseConfigured } from './lib/env'
+import { localeFromPath, stripLocale } from './i18n/paths'
+import { localizeData } from './i18n/localize'
 import type { PortfolioData } from './types/content'
 
 export async function loadData(): Promise<{ data: PortfolioData; source: 'supabase' | 'defaults' }> {
@@ -31,8 +33,13 @@ export function render(url: string, data: PortfolioData) {
       </StaticRouter>
     </StrictMode>,
   )
-  const slug = url.startsWith('/projects/') ? url.split('/')[2] : null
-  const project = slug ? data.projects.find((p) => p.slug === slug) : null
-  const head = renderHeadTags(project ? projectHead(data, project) : url === '/playground' ? playgroundHead(data) : homeHead(data))
-  return { html, head }
+  const locale = localeFromPath(url)
+  const path = stripLocale(url)
+  const local = localizeData(data, locale)
+  const slug = path.startsWith('/projects/') ? path.split('/')[2] : null
+  const project = slug ? local.projects.find((p) => p.slug === slug) : null
+  const head = renderHeadTags(
+    project ? projectHead(local, project, locale) : path === '/playground' ? playgroundHead(local, locale) : homeHead(local, locale),
+  )
+  return { html, head, locale }
 }
