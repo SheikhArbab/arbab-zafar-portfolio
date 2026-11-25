@@ -1,0 +1,272 @@
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { AnimatePresence, m } from 'framer-motion'
+import { AlertTriangle, ArrowUpRight, CheckCircle2, Download, Send } from 'lucide-react'
+import { usePortfolio } from '@/data/PortfolioContext'
+import { normalizeContact, validateContact, type ContactErrors, type ContactInput } from '@/lib/contact'
+import { cn, safeUrl } from '@/lib/utils'
+import { SectionHeading } from '@/components/site/SectionHeading'
+import { Reveal } from '@/components/site/Reveal'
+import { Button } from '@/components/ui/Button'
+import { FieldError, Input, Label, Textarea } from '@/components/ui/Field'
+import { SocialIcon, socialHref } from '@/components/ui/BrandIcons'
+import { Spinner } from '@/components/ui/Spinner'
+
+type Status = 'idle' | 'sending' | 'success' | 'error'
+type Errors = ContactErrors
+
+const TURNSTILE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined
+
+declare global {
+  interface Window {
+    turnstile?: { render: (el: HTMLElement, opts: Record<string, unknown>) => string; reset: (id?: string) => void }
+  }
+}
+
+function useTurnstile() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [token, setToken] = useState<string>('')
+  const widget = useRef<string>('')
+  useEffect(() => {
+    if (!TURNSTILE_KEY || !ref.current) return
+    const render = () => {
+      if (!window.turnstile || !ref.current || widget.current) return
+      widget.current = window.turnstile.render(ref.current, {
+        sitekey: TURNSTILE_KEY,
+        theme: 'dark',
+        callback: (t: string) => setToken(t),
+        'expired-callback': () => setToken(''),
+      })
+    }
+    if (window.turnstile) return render()
+    const s = document.createElement('script')
+    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
+    s.async = true
+    s.onload = render
+    document.head.appendChild(s)
+  }, [])
+  const reset = () => {
+    setToken('')
+    window.turnstile?.reset(widget.current)
+  }
+  return { ref, token, reset, enabled: Boolean(TURNSTILE_KEY) }
+}
+
+export function Contact({ index }: { index: number }) {
+  const { data } = usePortfolio()
+  const { profile, settings, documents } = data
+  const copy = settings.content.contact
+  const [values, setValues] = useState<ContactInput>({ name: '', email: '', subject: '', message: '' })
+  const [honeypot, setHoneypot] = useState('')
+  const [errors, setErrors] = useState<Errors>({})
+  const [status, setStatus] = useState<Status>('idle')
+  const [serverError, setServerError] = useState('')
+  const startedAt = useRef(Date.now())
+  const turnstile = useTurnstile()
+
+  const socials = profile.socials.filter((s) => s.visible && safeUrl(socialHref(s.platform, s.platform === 'email' ? s.url || profile.email : s.url)))
+  const cvs = documents.filter((d) => (d.kind === 'cv_en' || d.kind === 'cv_de') && safeUrl(d.file_url))
+
+  const set = (k: keyof ContactInput) => (e: { target: { value: string } }) => {
+    setValues((v) => ({ ...v, [k]: e.target.value }))
+    if (errors[k]) setErrors((er) => ({ ...er, [k]: undefined }))
+  }
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    const clean = normalizeContact(values)
+    const errs = validateContact(clean)
+    if (Object.keys(errs).length) {
+      setErrors(errs)
+      document.getElementById(`contact-${Object.keys(errs)[0]}`)?.focus()
+      return
+    }
+    if (turnstile.enabled && !turnstile.token) {
+      setServerError('Please complete the verification challenge.')
+      setStatus('error')
+      return
+    }
+    setStatus('sending')
+    setServerError('')
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...clean, website: honeypot, startedAt: startedAt.current, token: turnstile.token || undefined }),
+      })
+      const body = (await res.json().catch(() => ({}))) as { error?: string }
+      if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
+      setStatus('success')
+      setValues({ name: '', email: '', subject: '', message: '' })
+      turnstile.reset()
+    } catch (err) {
+      setServerError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setStatus('error')
+      turnstile.reset()
+    }
+  }
+
+  const field = (k: keyof ContactInput) => ({
+    id: `contact-${k}`,
+    name: k,
+    value: values[k],
+    onChange: set(k),
+    'aria-invalid': Boolean(errors[k]) || undefined,
+    'aria-describedby': errors[k] ? `contact-${k}-err` : undefined,
+    disabled: status === 'sending',
+  })
+
+  return (
+    <section id="contact" aria-labelledby="contact-title" className="relative py-24 md:py-32">
+      <div aria-hidden className="bg-grid mask-radial absolute inset-0 -z-10 opacity-40" />
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+          <div>
+            <SectionHeading id="contact-title" index={index} eyebrow={copy.eyebrow} heading={copy.heading} description={copy.description} className="mb-10 md:mb-10" />
+
+            {profile.is_available && (
+              <Reveal>
+                <p className="mb-8 inline-flex items-center gap-2 rounded-full border border-accent/25 bg-accent/[0.06] px-3 py-1.5 font-mono text-xs text-accent">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" /> {profile.availability_text}
+                </p>
+              </Reveal>
+            )}
+
+            <ul className="space-y-2">
+              {socials.map((s, i) => {
+                const raw = s.platform === 'email' ? s.url || profile.email : s.url
+                const href = safeUrl(socialHref(s.platform, raw))!
+                const display = raw.replace(/^mailto:/, '').replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')
+                return (
+                  <Reveal as="li" key={s.platform + i} delay={i * 0.05}>
+                    <a
+                      href={href}
+                      target={s.platform === 'email' ? undefined : '_blank'}
+                      rel="noopener noreferrer me"
+                      className="group flex items-center gap-4 rounded-xl border border-line bg-white/[0.015] px-4 py-3.5 transition-colors hover:border-accent/35"
+                    >
+                      <span className="grid h-9 w-9 place-items-center rounded-lg border border-line text-muted transition-colors group-hover:text-accent">
+                        <SocialIcon platform={s.platform} className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-mono text-[0.62rem] tracking-widest text-dim uppercase">{s.label}</span>
+                        <span className="block truncate text-sm text-fg">{display}</span>
+                      </span>
+                      <ArrowUpRight className="h-4 w-4 text-dim transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-accent" />
+                    </a>
+                  </Reveal>
+                )
+              })}
+            </ul>
+
+            {cvs.length > 0 && (
+              <div className="mt-6 flex flex-wrap gap-2">
+                {cvs.map((d) => (
+                  <a
+                    key={d.id}
+                    href={d.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-lg border border-line-strong px-3 py-2 font-mono text-xs text-fg hover:border-accent/50 hover:text-accent"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    {d.kind === 'cv_de' ? 'Lebenslauf (DE)' : 'Resume (EN)'}
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <Reveal>
+            <div className="glass hud relative overflow-hidden rounded-2xl">
+              <div className="flex items-center justify-between border-b border-line px-5 py-3 font-mono text-[0.7rem] text-dim">
+                <span>
+                  <span className="text-accent">●</span> secure-channel://transmit
+                </span>
+                <span>tls · rate-limited</span>
+              </div>
+
+              <AnimatePresence mode="wait">
+                {status === 'success' ? (
+                  <m.div
+                    key="ok"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="flex min-h-[420px] flex-col items-center justify-center p-8 text-center"
+                    role="status"
+                  >
+                    <CheckCircle2 className="h-12 w-12 text-accent" aria-hidden />
+                    <p className="mt-5 font-mono text-sm text-accent">200 OK · transmission complete</p>
+                    <p className="mt-2 max-w-sm text-muted">{copy.success_message}</p>
+                    <Button variant="outline" className="mt-8" onClick={() => setStatus('idle')}>
+                      Send another message
+                    </Button>
+                  </m.div>
+                ) : (
+                  <m.form key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onSubmit={submit} noValidate className="space-y-5 p-5 md:p-7">
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                      <div>
+                        <Label htmlFor="contact-name">Name</Label>
+                        <Input {...field('name')} autoComplete="name" placeholder="Your name" maxLength={100} />
+                        <FieldError>{errors.name && <span id="contact-name-err">{errors.name}</span>}</FieldError>
+                      </div>
+                      <div>
+                        <Label htmlFor="contact-email">Email</Label>
+                        <Input {...field('email')} type="email" autoComplete="email" placeholder="you@company.com" maxLength={200} />
+                        <FieldError>{errors.email && <span id="contact-email-err">{errors.email}</span>}</FieldError>
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="contact-subject">Subject</Label>
+                      <Input {...field('subject')} placeholder="Role, project or question" maxLength={150} />
+                      <FieldError>{errors.subject && <span id="contact-subject-err">{errors.subject}</span>}</FieldError>
+                    </div>
+                    <div>
+                      <Label htmlFor="contact-message">Message</Label>
+                      <Textarea {...field('message')} rows={6} placeholder="Tell me a little about what you have in mind…" maxLength={5000} />
+                      <div className="flex justify-between">
+                        <FieldError>{errors.message && <span id="contact-message-err">{errors.message}</span>}</FieldError>
+                        <span className="mt-1.5 ml-auto font-mono text-[0.65rem] text-dim">{values.message.length}/5000</span>
+                      </div>
+                    </div>
+
+                    {/* Honeypot: invisible to people, tempting to bots */}
+                    <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+                      <label>
+                        Website
+                        <input tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} name="website" />
+                      </label>
+                    </div>
+
+                    {turnstile.enabled && <div ref={turnstile.ref} className="min-h-[65px]" />}
+
+                    {status === 'error' && serverError && (
+                      <p role="alert" className="flex items-start gap-2 rounded-lg border border-red-400/30 bg-red-400/[0.06] px-3 py-2.5 text-sm text-red-300">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> {serverError}
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
+                      <p className="font-mono text-[0.65rem] text-dim">Your details are only used to reply to you.</p>
+                      <Button type="submit" size="lg" disabled={status === 'sending'} className={cn(status === 'sending' && 'opacity-80')}>
+                        {status === 'sending' ? (
+                          <>
+                            <Spinner /> Transmitting…
+                          </>
+                        ) : (
+                          <>
+                            {copy.submit_label} <Send className="h-4 w-4" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </m.form>
+                )}
+              </AnimatePresence>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  )
+}
