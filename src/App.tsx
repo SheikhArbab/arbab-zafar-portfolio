@@ -4,11 +4,11 @@ import { PortfolioProvider, usePortfolio } from '@/data/PortfolioContext'
 import { PublicLayout } from '@/components/site/PublicLayout'
 import { PageLoader } from '@/components/site/PageLoader'
 import { ErrorBoundary } from '@/components/site/ErrorBoundary'
-import { rpcAsUser, storedAccessToken } from '@/lib/rest'
+import { storedAccessToken } from '@/lib/rest'
 import Home from '@/pages/Home'
 import ProjectPage from '@/pages/ProjectPage'
 import NotFound from '@/pages/NotFound'
-import Maintenance from '@/pages/Maintenance'
+import Maintenance, { MaintenanceBanner } from '@/pages/Maintenance'
 import Playground from '@/pages/Playground'
 import type { PortfolioData } from '@/types/content'
 
@@ -35,19 +35,40 @@ function CvRoute() {
 
 function PublicApp() {
   const { data, ready } = usePortfolio()
-  const [adminBypass, setAdminBypass] = useState(false)
+  // 'checking' only while a signed-in browser is verified, so admins don't see the holding page flash.
+  const [adminBypass, setAdminBypass] = useState<'no' | 'checking' | 'yes'>('no')
+  const maintenance = data.settings.maintenance_mode
 
   useEffect(() => {
-    if (!data.settings.maintenance_mode) return
-    const token = storedAccessToken()
-    if (token) void rpcAsUser<boolean>('is_admin', token).then((ok) => setAdminBypass(ok === true))
-  }, [data.settings.maintenance_mode])
+    if (!maintenance) return
+    // Decided by the database: is_admin() is true only for an admin session that passed two-step login.
+    // The real Supabase client (loaded only for signed-in browsers) refreshes an expired session first.
+    if (!storedAccessToken()) return setAdminBypass('no')
+    let cancelled = false
+    setAdminBypass('checking')
+    import('@/lib/supabase')
+      .then(async ({ supabase }) => {
+        const { data: s } = (await supabase?.auth.getSession()) ?? { data: { session: null } }
+        if (!s.session || !supabase) return false
+        const { data: ok } = await supabase.rpc('is_admin')
+        return ok === true
+      })
+      .catch(() => false)
+      .then((ok) => {
+        if (!cancelled) setAdminBypass(ok ? 'yes' : 'no')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [maintenance])
 
   if (!ready) return <PageLoader />
-  if (data.settings.maintenance_mode && !adminBypass) return <Maintenance />
+  if (maintenance && adminBypass === 'checking') return <PageLoader label="checking access" />
+  if (maintenance && adminBypass !== 'yes') return <Maintenance />
 
   return (
     <PublicLayout>
+      {maintenance && <MaintenanceBanner />}
       <Routes>
         {(['', '/de'] as const).map((prefix) => [
           <Route key={`${prefix}home`} path={prefix || '/'} element={<Home />} />,

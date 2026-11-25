@@ -7,7 +7,7 @@ import App from './App'
 const loadFeatures = () => import('./lib/motionFeatures').then((r) => r.default)
 import { fetchPortfolio } from './data/fetchPortfolio'
 import { defaultData } from './content/defaults'
-import { cvHead, homeHead, playgroundHead, projectHead, renderHeadTags } from './seo/head'
+import { cvHead, homeHead, maintenanceHead, playgroundHead, projectHead, renderHeadTags } from './seo/head'
 import { isSupabaseConfigured } from './lib/env'
 import { localeFromPath, stripLocale } from './i18n/paths'
 import { localizeData } from './i18n/localize'
@@ -38,8 +38,11 @@ export function render(url: string, data: PortfolioData) {
   const local = localizeData(data, locale)
   const slug = path.startsWith('/projects/') ? path.split('/')[2] : null
   const project = slug ? local.projects.find((p) => p.slug === slug) : null
+  // While maintenance is on, every prerendered page is the holding page: give it matching, noindex metadata.
   const head = renderHeadTags(
-    project
+    local.settings.maintenance_mode
+      ? maintenanceHead(local, locale)
+      : project
       ? projectHead(local, project, locale)
       : path === '/playground'
         ? playgroundHead(local, locale)

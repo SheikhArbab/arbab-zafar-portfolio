@@ -45,7 +45,17 @@ export async function sha256(input: string) {
 export const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
 
-/** Verifies the caller's Supabase access token AND their admin_users row. */
+/** Claims of a token that Supabase Auth has already validated (getUser). */
+function tokenClaims(token: string): Record<string, unknown> {
+  try {
+    const part = token.split('.')[1] ?? ''
+    return JSON.parse(Buffer.from(part.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'))
+  } catch {
+    return {}
+  }
+}
+
+/** Verifies the caller's Supabase access token, that it passed MFA (aal2), AND their admin_users row. */
 export async function requireAdmin(req: Request): Promise<{ ok: true } | { ok: false; res: Response }> {
   const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '')
   if (!token) return { ok: false, res: json(401, { error: 'Not signed in' }) }
@@ -57,6 +67,8 @@ export async function requireAdmin(req: Request): Promise<{ ok: true } | { ok: f
   }
   const { data: user, error } = await sb.auth.getUser(token)
   if (error || !user.user) return { ok: false, res: json(401, { error: 'Invalid session' }) }
+  // The token is authentic (getUser checked it with Supabase Auth); now require the second factor.
+  if (tokenClaims(token).aal !== 'aal2') return { ok: false, res: json(403, { error: 'Two-step verification required' }) }
   const { data: admin } = await sb.from('admin_users').select('user_id').eq('user_id', user.user.id).maybeSingle()
   if (!admin) return { ok: false, res: json(403, { error: 'Not an admin' }) }
   return { ok: true }

@@ -341,3 +341,200 @@ export function LebenslaufCv({ m, today }: { m: CvModel; today: string }) {
     </article>
   )
 }
+
+/* ──────────────────────────── Europass ──────────────────────────── */
+/* The standard Europass CV structure (labels left, content right, CEFR language grid).
+   No EU/Europass logo or footer: those are EU trademarks. */
+
+const EU_BLUE = 'text-[#1f4e9a]'
+const EU_LABEL = 'text-[#3a7bbf]'
+
+function EuSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="mt-[6mm]">
+      <div className="grid grid-cols-[52mm_1fr] items-center gap-x-[6mm]">
+        <h2 className={`text-right text-[8.6pt] font-semibold tracking-[0.12em] uppercase ${EU_BLUE}`}>{title}</h2>
+        <span className="h-[1.2px] bg-[#3a7bbf]/60" />
+      </div>
+      <div className="mt-[3mm] space-y-[3.2mm]">{children}</div>
+    </section>
+  )
+}
+
+function EuRow({ label, children }: { label?: ReactNode; children: ReactNode }) {
+  return (
+    <div className="grid break-inside-avoid grid-cols-[52mm_1fr] gap-x-[6mm]">
+      <div className={`text-right text-[8.4pt] ${EU_LABEL}`}>{label}</div>
+      <div>{children}</div>
+    </div>
+  )
+}
+
+export function EuropassCv({ m }: { m: CvModel }) {
+  const t = dict(m.locale).cv
+  const eu = t.eu
+  const contact = m.contact
+  const cell = 'border border-[#3a7bbf]/40 px-[1.6mm] py-[1mm] text-center'
+  return (
+    <article lang={m.locale} className={`cv-sheet bg-white px-[14mm] py-[14mm] text-[9pt] leading-[1.45] ${INK}`}>
+      <EuRow
+        label={
+          m.photo ? (
+            <span className="inline-block">
+              <Avatar m={m} className="ml-auto h-[38mm] w-[30mm] rounded-[1mm]" />
+            </span>
+          ) : (
+            <span className={`text-[8.6pt] font-semibold tracking-[0.12em] uppercase ${EU_BLUE}`}>{eu.personalInfo}</span>
+          )
+        }
+      >
+        {m.photo && <p className={`text-[8.6pt] font-semibold tracking-[0.12em] uppercase ${EU_BLUE}`}>{eu.personalInfo}</p>}
+        <h1 className="mt-[1mm] text-[20pt] leading-[1.15] font-semibold">{m.name}</h1>
+        <ul className="mt-[3mm] space-y-[1.2mm] text-[8.8pt]">
+          {contact.map((c) => (
+            <li key={c.label + c.value} className="flex gap-[2mm]">
+              <span className={`w-[24mm] shrink-0 ${MUTED}`}>{c.label}</span>
+              <Links text={c.value} href={c.href} />
+            </li>
+          ))}
+          {m.personal.map((p) => (
+            <li key={p.label} className="flex gap-[2mm]">
+              <span className={`w-[24mm] shrink-0 ${MUTED}`}>{p.label}</span>
+              {p.value}
+            </li>
+          ))}
+        </ul>
+      </EuRow>
+
+      <section className="mt-[6mm]">
+        <EuRow label={<span className={`text-[8.6pt] font-semibold tracking-[0.12em] uppercase ${EU_BLUE}`}>{eu.position}</span>}>
+          <p className={`text-[12pt] font-semibold ${EU_BLUE}`}>{m.title}</p>
+          {m.summary && <p className={`mt-[1.5mm] ${MUTED}`}>{m.summary}</p>}
+        </EuRow>
+      </section>
+
+      {m.experience.length > 0 && (
+        <EuSection title={eu.workExperience}>
+          {m.experience.map((e) => (
+            <EuRow key={e.id} label={e.period}>
+              <p className={`text-[10pt] font-semibold ${EU_BLUE}`}>{e.title}</p>
+              <p>{[e.company, e.meta].filter(Boolean).join(' · ')}</p>
+              {e.description && <p className="mt-[1mm]">{e.description}</p>}
+              {e.bullets.length > 0 && (
+                <ul className="mt-[1mm] list-disc space-y-[0.5mm] pl-[4mm]">
+                  {e.bullets.map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
+              )}
+              {e.tech.length > 0 && (
+                <p className={`mt-[1mm] text-[8.4pt] ${MUTED}`}>
+                  {eu.technologies}: {e.tech.join(', ')}
+                </p>
+              )}
+            </EuRow>
+          ))}
+        </EuSection>
+      )}
+
+      {m.education.length > 0 && (
+        <EuSection title={eu.educationTraining}>
+          {m.education.map((e) => (
+            <EuRow key={e.id} label={e.period}>
+              <p className={`text-[10pt] font-semibold ${EU_BLUE}`}>{e.title}</p>
+              {e.institution && <p>{e.institution}</p>}
+              {e.description && <p className="mt-[0.8mm]">{e.description}</p>}
+            </EuRow>
+          ))}
+        </EuSection>
+      )}
+
+      <EuSection title={eu.personalSkills}>
+        {m.motherTongue && <EuRow label={eu.motherTongue}>{m.motherTongue}</EuRow>}
+        {m.languages.length > 0 && (
+          <EuRow label={eu.otherLanguages}>
+            <table className="w-full border-collapse text-[8.2pt]">
+              <thead>
+                <tr className={EU_BLUE}>
+                  <th className={`${cell} w-[24mm]`} rowSpan={2} />
+                  <th className={`${cell} font-semibold uppercase`} colSpan={2}>
+                    {eu.understanding}
+                  </th>
+                  <th className={`${cell} font-semibold uppercase`} colSpan={2}>
+                    {eu.speaking}
+                  </th>
+                  <th className={`${cell} font-semibold uppercase`}>{eu.writing}</th>
+                </tr>
+                <tr className={`text-[7.4pt] ${EU_LABEL}`}>
+                  {[eu.listening, eu.reading, eu.spokenInteraction, eu.spokenProduction, ''].map((h, i) => (
+                    <th key={i} className={`${cell} font-normal`}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {m.languages.map((l) => (
+                  <tr key={l.name} className="break-inside-avoid">
+                    <th className={`${cell} text-left font-semibold`}>{l.name}</th>
+                    {l.skills ? (
+                      l.skills.map((s, i) => (
+                        <td key={i} className={`${cell} font-medium`}>
+                          {s || '—'}
+                        </td>
+                      ))
+                    ) : (
+                      <td className={cell} colSpan={5}>
+                        {l.level} <span className={MUTED}>({eu.overall})</span>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className={`mt-[1.5mm] text-[7.2pt] ${MUTED}`}>{eu.cefr}</p>
+          </EuRow>
+        )}
+        {m.skills.length > 0 && (
+          <EuRow label={eu.digitalSkills}>
+            <ul className="space-y-[1mm]">
+              {m.skills.map((g) => (
+                <li key={g.group}>
+                  <span className="font-semibold">{g.group}: </span>
+                  {g.items.join(', ')}
+                </li>
+              ))}
+            </ul>
+          </EuRow>
+        )}
+        {m.personal.find((p) => p.label === t.licence) && <EuRow label={eu.drivingLicence}>{m.personal.find((p) => p.label === t.licence)?.value}</EuRow>}
+      </EuSection>
+
+      {(m.projects.length > 0 || m.interests.length > 0) && (
+        <EuSection title={eu.additional}>
+          {m.projects.length > 0 && (
+            <EuRow label={eu.projects}>
+              <ul className="space-y-[2mm]">
+                {m.projects.map((p) => (
+                  <li key={p.id} className="break-inside-avoid">
+                    <Links text={p.title} href={p.url} />
+                    {p.category && <span className={MUTED}> · {p.category}</span>}
+                    {p.summary && <p>{p.summary}</p>}
+                  </li>
+                ))}
+              </ul>
+            </EuRow>
+          )}
+          {m.interests.length > 0 && <EuRow label={eu.interests}>{m.interests.join(', ')}</EuRow>}
+        </EuSection>
+      )}
+
+      {m.showQr && (
+        <div className="mt-[8mm] flex break-inside-avoid items-end justify-end gap-[3mm]">
+          <p className={`max-w-[40mm] text-right text-[7pt] ${MUTED}`}>{t.qr}</p>
+          <QrCode value={m.portfolioUrl} title={t.qr} className="h-[18mm] w-[18mm]" />
+        </div>
+      )}
+    </article>
+  )
+}

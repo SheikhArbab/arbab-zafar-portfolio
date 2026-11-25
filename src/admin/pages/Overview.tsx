@@ -6,6 +6,7 @@ import { requireSupabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { PageHeader, Panel } from '../components/PageHeader'
+import { triggerRebuild } from '../lib/rebuild'
 import type { ContactMessage } from '@/types/content'
 
 interface Stats {
@@ -80,10 +81,7 @@ export default function Overview() {
   const publish = async () => {
     setPublishing(true)
     try {
-      const { data } = await requireSupabase().auth.getSession()
-      const res = await fetch('/api/rebuild', { method: 'POST', headers: { Authorization: `Bearer ${data.session?.access_token}` } })
-      const body = (await res.json().catch(() => ({}))) as { error?: string }
-      if (!res.ok) throw new Error(body.error || `Failed (${res.status})`)
+      await triggerRebuild()
       toast.success('Rebuild triggered. SEO pages & sitemap will refresh in ~1–2 minutes.')
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Rebuild failed')

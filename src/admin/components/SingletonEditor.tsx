@@ -32,7 +32,8 @@ export interface FieldGroup {
 interface Props {
   table: 'profile' | 'site_settings' | 'private_settings'
   groups: FieldGroup[]
-  onSaved?: (row: Record<string, unknown>) => void
+  /** Called after a successful save with the saved row and the row as it was before. */
+  onSaved?: (row: Record<string, unknown>, previous: Record<string, unknown> | null) => void
   /** Extra content rendered under the groups (e.g. action buttons). */
   footer?: React.ReactNode
 }
@@ -106,10 +107,11 @@ export function SingletonEditor({ table, groups, onSaved, footer }: Props) {
     clearDraft(draftKey)
     // Only after a successful save: delete uploads that were replaced or removed.
     void cleanupReplacedFiles(allFields, original, merged)
+    const previous = original
     setOriginal(merged)
     setDraft(structuredClone(merged))
     toast.success(table === 'private_settings' ? 'Saved.' : 'Saved. Changes are live on the portfolio.')
-    onSaved?.(merged)
+    onSaved?.(merged, previous)
   }
 
   if (!draft)

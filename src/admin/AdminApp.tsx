@@ -10,6 +10,7 @@ import { DirtyProvider } from './lib/dirty'
 import { ConfirmProvider } from './components/Confirm'
 import { AdminLayout } from './components/AdminLayout'
 import Login from './pages/Login'
+import MfaGate from './pages/MfaGate'
 import { MESSAGES_CHANGED } from './lib/events'
 
 const Overview = lazy(() => import('./pages/Overview'))
@@ -77,10 +78,12 @@ function useUnreadCount(enabled: boolean) {
 }
 
 function Protected() {
-  const { session, isAdmin, loading, recovery } = useAuth()
+  const { session, isAdmin, isAdminAccount, mfa, loading, recovery } = useAuth()
   const unread = useUnreadCount(isAdmin)
   if (loading) return <PageLoader label="verifying session" />
   if (!session || recovery) return <Navigate to="/admin/login" replace />
+  // Password alone is not enough: the second factor unlocks admin rights (also enforced in the database).
+  if (isAdminAccount && mfa !== 'ok') return <MfaGate />
   if (!isAdmin) return <Denied />
   return (
     <AdminLayout unread={unread}>

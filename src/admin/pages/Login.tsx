@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/Button'
 import { FieldError, Input, Label } from '@/components/ui/Field'
 import { Spinner } from '@/components/ui/Spinner'
 import { useAuth } from '../lib/auth'
+import MfaGate from './MfaGate'
 
 export default function Login() {
-  const { session, isAdmin, loading, recovery, clearRecovery } = useAuth()
+  const { session, mfa, loading, recovery, clearRecovery } = useAuth()
   const navigate = useNavigate()
   const [mode, setMode] = useState<'login' | 'reset'>('login')
   const [email, setEmail] = useState('')
@@ -17,7 +18,10 @@ export default function Login() {
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
 
-  if (!loading && session && isAdmin && !recovery) return <Navigate to="/admin" replace />
+  // Signed in: /admin shows the two-step screen, the dashboard, or "access denied".
+  if (!loading && session && !recovery) return <Navigate to="/admin" replace />
+  // Password reset for an account with an authenticator: verify the code before changing the password.
+  if (!loading && session && recovery && mfa === 'challenge') return <MfaGate />
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()

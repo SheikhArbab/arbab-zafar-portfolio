@@ -114,7 +114,7 @@ const groups: FieldGroup[] = [
   {
     title: 'CV generator (/cv)',
     description: 'Optional details for the generated CV. Everything here is public on /cv, and empty fields are simply left off.',
-    translate: ['cv.summary', 'cv.address', 'cv.nationality', 'cv.driving_licence', 'cv.languages', 'cv.interests'],
+    translate: ['cv.summary', 'cv.address', 'cv.nationality', 'cv.driving_licence', 'cv.mother_tongue', 'cv.languages', 'cv.interests'],
     aside: () => <CvLinks />,
     fields: [
       { name: 'cv.summary', label: 'CV summary', type: 'textarea', rows: 3, max: 600, help: 'Empty: the About lead paragraph is used.' },
@@ -123,15 +123,21 @@ const groups: FieldGroup[] = [
       { name: 'cv.nationality', label: 'Nationality', type: 'text', max: 60 },
       { name: 'cv.birth_date', label: 'Date of birth', type: 'text', max: 30, help: 'Common on German CVs, but optional.' },
       { name: 'cv.driving_licence', label: 'Driving licence', type: 'text', max: 40 },
+      { name: 'cv.mother_tongue', label: 'Mother tongue(s)', type: 'text', max: 80, placeholder: 'e.g. Urdu', help: 'Shown on the Europass layout.' },
       {
         name: 'cv.languages',
         label: 'Languages',
         type: 'repeater',
         itemLabel: 'language',
-        help: 'Empty: German is taken from the “Deutsch lernen” section.',
+        help: 'Empty: German is taken from the “Deutsch lernen” section. The per-skill levels (A1–C2) fill the Europass language table; leave them empty to show the overall level.',
         fields: [
           { name: 'name', label: 'Language', type: 'text', placeholder: 'English' },
-          { name: 'level', label: 'Level', type: 'text', placeholder: 'C1 · fluent' },
+          { name: 'level', label: 'Overall level', type: 'text', placeholder: 'C1 · fluent' },
+          { name: 'listening', label: 'Listening', type: 'text', placeholder: 'C1' },
+          { name: 'reading', label: 'Reading', type: 'text', placeholder: 'C1' },
+          { name: 'spoken_interaction', label: 'Spoken interaction', type: 'text', placeholder: 'B2' },
+          { name: 'spoken_production', label: 'Spoken production', type: 'text', placeholder: 'B2' },
+          { name: 'writing', label: 'Writing', type: 'text', placeholder: 'B2' },
         ],
       },
       { name: 'cv.interests', label: 'Interests', type: 'tags' },
@@ -149,6 +155,8 @@ function CvLinks() {
         ['/cv?t=modern', 'Modern CV (English)'],
         ['/de/cv?t=lebenslauf', 'Lebenslauf (Deutsch)'],
         ['/cv?t=lebenslauf', 'German-style CV in English'],
+        ['/cv?t=europass', 'Europass CV (English)'],
+        ['/de/cv?t=europass', 'Europass CV (Deutsch)'],
       ].map(([href, label]) => (
         <a key={href} href={href} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-lg px-2 py-1.5 text-fg hover:bg-white/5">
           {label} <span className="font-mono text-xs text-accent">↗</span>

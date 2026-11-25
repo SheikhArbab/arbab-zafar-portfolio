@@ -125,7 +125,7 @@ To try the contact form locally, use `npx netlify dev`, which runs the functions
    *Alternatively, with the CLI:* `npx supabase link --project-ref <ref>` then `npx supabase db push` and run `seed.sql` in the SQL editor.
 3. **Storage:** the storage migration creates two buckets, `media` (images, 5 MB max) and `documents` (PDFs, 10 MB max). Both are public-read by URL, not listable, and admin-write only. Nothing to click.
 4. **Auth → Providers → Email:** keep Email enabled, and **turn OFF "Allow new users to sign up"**. Your admin account is the only account.
-5. **Auth → URL Configuration:** set **Site URL** to your domain (e.g. `https://arbab-dev.netlify.app`) and add `https://arbab-dev.netlify.app/admin/login` to **Redirect URLs** (needed for password-reset emails).
+5. **Auth → URL Configuration:** set **Site URL** to your domain (e.g. `https://arbab-zafar.netlify.app`) and add `https://arbab-zafar.netlify.app/admin/login` to **Redirect URLs** (needed for password-reset emails).
 6. **Project Settings → API:** copy the **Project URL**, the **anon public** key, and the **service_role** key (secret) for §6.
 
 ## 5. Create your admin account
@@ -167,7 +167,7 @@ Only `VITE_*` variables reach the browser bundle. All secrets stay server-side i
 
 1. Push this folder to a GitHub repository.
 2. Netlify → **Add new site → Import from Git** → pick the repo. Settings are read from `netlify.toml` (build command `npm run build`, publish `dist`, functions `netlify/functions`).
-   *To keep your existing URL* (`arbab-dev.netlify.app`), connect the repository to your **existing** site instead: Site configuration → Build & deploy → Link repository.
+   *To keep an existing URL*, connect the repository to that **existing** site instead: Site configuration → Build & deploy → Link repository.
 3. **Site configuration → Environment variables:** add everything from §6.
 4. **Build & deploy → Build hooks → Add build hook** (e.g. "Admin publish"), copy the URL into `NETLIFY_BUILD_HOOK_URL`, and redeploy.
 5. **Custom domain (optional):** Domain management → Add a domain → follow the DNS instructions (Netlify DNS, or a CNAME to `<site>.netlify.app`). HTTPS is automatic. Then update `SITE_URL`, **Admin → SEO → Site URL**, and the Supabase Auth Site URL / Redirect URLs.

@@ -44,12 +44,20 @@ export interface GermanInfo {
 
 export interface CvLanguage {
   name: string
+  /** Overall level, e.g. "B2" or "C1 · fluent". */
   level: string
+  /** Optional CEFR self-assessment per skill (A1–C2), used by the Europass layout. */
+  listening?: string
+  reading?: string
+  spoken_interaction?: string
+  spoken_production?: string
+  writing?: string
 }
 
 /** Extra details used only by the CV generator (/cv). All optional; empty fields are left off the CV. */
 export interface CvInfo {
   summary: string
+  mother_tongue: string
   phone: string
   address: string
   nationality: string

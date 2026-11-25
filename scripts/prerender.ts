@@ -27,7 +27,7 @@ if (!template.includes('<!--app-html-->') || !template.includes('<!--app-head-->
 }
 const { data, source } = await loadData()
 
-const siteUrl = (process.env.SITE_URL || data.settings.site_url || 'https://arbab-dev.netlify.app').replace(/\/+$/, '')
+const siteUrl = (process.env.SITE_URL || data.settings.site_url || 'https://arbab-zafar.netlify.app').replace(/\/+$/, '')
 data.settings.site_url = siteUrl
 
 const safeJson = (v: unknown) => JSON.stringify(v).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029')

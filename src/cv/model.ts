@@ -32,7 +32,8 @@ export interface CvModel {
   projects: { id: string; title: string; category: string; summary: string; tech: string[]; url: string }[]
   skills: { group: string; items: string[] }[]
   education: { id: string; title: string; institution: string; period: string; description: string }[]
-  languages: { name: string; level: string }[]
+  motherTongue: string
+  languages: { name: string; level: string; skills: [string, string, string, string, string] | null }[]
   interests: string[]
   portfolioUrl: string
   place: string
@@ -102,9 +103,14 @@ export function buildCv(data: PortfolioData, locale: Locale): CvModel {
   const education = data.education.map((e) => ({ id: e.id, title: e.title, institution: e.institution, period: e.date_label, description: e.description }))
 
   // Languages entered in the admin win; otherwise German comes from the "Deutsch lernen" profile section.
-  const languages = cv.languages.filter((l) => l.name.trim())
+  const languages: CvModel['languages'] = cv.languages
+    .filter((l) => l.name.trim())
+    .map((l) => {
+      const per = [l.listening, l.reading, l.spoken_interaction, l.spoken_production, l.writing].map((v) => (v ?? '').trim())
+      return { name: l.name, level: l.level, skills: per.some(Boolean) ? (per as [string, string, string, string, string]) : null }
+    })
   if (!languages.length && profile.german.enabled && profile.german.level) {
-    languages.push({ name: t.cv.german, level: t.cv.germanLevel(profile.german.level, profile.german.goal) })
+    languages.push({ name: t.cv.german, level: t.cv.germanLevel(profile.german.level, profile.german.goal), skills: null })
   }
 
   const initials = profile.full_name
@@ -128,6 +134,7 @@ export function buildCv(data: PortfolioData, locale: Locale): CvModel {
     skills,
     education,
     languages,
+    motherTongue: (cv.mother_tongue ?? '').trim(),
     interests: cv.interests.filter((i) => i.trim()),
     portfolioUrl,
     place: (cv.address || profile.location).split(',')[0].trim(),

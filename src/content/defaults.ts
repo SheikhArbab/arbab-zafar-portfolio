@@ -86,18 +86,20 @@ export const defaultContent: SiteContent = {
 export const defaultSettings: SiteSettings = {
   id: 1,
   site_name: 'Arbab Zafar',
-  site_url: 'https://arbab-dev.netlify.app',
-  seo_title: 'Arbab Zafar: Software Engineer & Full-Stack Developer',
+  site_url: 'https://arbab-zafar.netlify.app',
+  seo_title: 'Arbab Zafar: Full-Stack Developer, Ausbildung in Germany',
   seo_description:
-    'Arbab Zafar is a software engineer and full-stack developer in Pakistan building web and mobile products with React, Next.js, React Native, Angular, Node.js and .NET.',
+    'Full-stack developer from Pakistan (React, Next.js, React Native, Node.js, .NET), learning German and looking for an Ausbildung as Fachinformatiker in Germany.',
   seo_keywords: [
     'Arbab Zafar',
     'Arbab Zafar Software Engineer',
+    'Ausbildung Germany',
+    'Ausbildung Fachinformatiker Anwendungsentwicklung',
     'Full Stack Developer Pakistan',
     'React Developer',
     'Next.js Developer',
-    'MERN Stack Developer',
     'React Native Developer',
+    'MERN Stack Developer',
   ],
   og_image_url: null,
   favicon_url: null,
@@ -180,7 +182,7 @@ export const defaultProfile: Profile = {
     { platform: 'github', label: 'GitHub', url: 'https://github.com/SheikhArbab', visible: true },
     { platform: 'linkedin', label: 'LinkedIn', url: 'https://www.linkedin.com/in/arbab-zafar-web-developer/', visible: true },
     { platform: 'email', label: 'Email', url: '', visible: true },
-    { platform: 'portfolio', label: 'Portfolio', url: 'https://arbab-dev.netlify.app', visible: true },
+    { platform: 'portfolio', label: 'Portfolio', url: 'https://arbab-zafar.netlify.app', visible: true },
     { platform: 'whatsapp', label: 'WhatsApp', url: '', visible: false },
   ],
   german: {
@@ -198,6 +200,7 @@ export const defaultProfile: Profile = {
   },
   cv: {
     summary: '',
+    mother_tongue: '',
     phone: '',
     address: '',
     nationality: '',

@@ -1,5 +1,8 @@
 import { PageHeader } from '../components/PageHeader'
+import { toast } from 'sonner'
 import { SingletonEditor, type FieldGroup } from '../components/SingletonEditor'
+import { TwoStepSettings } from '../components/TwoStepSettings'
+import { triggerRebuild } from '../lib/rebuild'
 
 const sections = ['about', 'experience', 'skills', 'projects', 'education', 'german', 'playground', 'contact'] as const
 
@@ -63,7 +66,7 @@ const groups: FieldGroup[] = [
   {
     title: 'Maintenance',
     fields: [
-      { name: 'maintenance_mode', label: 'Maintenance mode', type: 'switch', help: 'Visitors see a holding page. Signed-in admins still see the site.' },
+      { name: 'maintenance_mode', label: 'Maintenance mode', type: 'switch', help: 'Visitors see a holding page right away; the static pages are rebuilt automatically (~1–2 min). Admins signed in with two-step login still see the site, with a banner.' },
       { name: 'maintenance_message', label: 'Message', type: 'text', max: 200 },
     ],
   },
@@ -73,7 +76,26 @@ export default function SettingsPage() {
   return (
     <div>
       <PageHeader title="Site settings" description="Theme, motion, section visibility and maintenance mode. Availability status is under Profile." />
-      <SingletonEditor table="site_settings" groups={groups} />
+      <div className="space-y-6">
+        <SingletonEditor
+          table="site_settings"
+          groups={groups}
+          onSaved={(row, previous) => {
+            if (Boolean(row.maintenance_mode) === Boolean(previous?.maintenance_mode)) return
+            // Rebuild so the prerendered HTML (what crawlers and the first paint see) matches the switch.
+            triggerRebuild()
+              .then(() =>
+                toast.success(
+                  row.maintenance_mode
+                    ? 'Maintenance is ON: visitors see the holding page. Static pages refresh in ~1–2 minutes.'
+                    : 'Maintenance is OFF: the site is back. Static pages refresh in ~1–2 minutes.',
+                ),
+              )
+              .catch((e: unknown) => toast.error(`Saved, but the rebuild failed: ${e instanceof Error ? e.message : 'unknown error'}. Use “Publish SEO build” on the Overview.`))
+          }}
+        />
+        <TwoStepSettings />
+      </div>
     </div>
   )
 }

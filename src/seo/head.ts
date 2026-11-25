@@ -31,7 +31,7 @@ const trimSlash = (u: string) => u.replace(/\/+$/, '')
 
 export function siteUrl(data: PortfolioData) {
   const build = (import.meta.env.VITE_SITE_URL as string | undefined) || ''
-  return trimSlash(build || data.settings.site_url || 'https://arbab-dev.netlify.app')
+  return trimSlash(build || data.settings.site_url || 'https://arbab-zafar.netlify.app')
 }
 
 function absolute(base: string, url: string | null | undefined) {
@@ -228,6 +228,17 @@ export function cvHead(data: PortfolioData, locale: Locale = 'en'): HeadData {
         mainEntity: { '@type': 'Person', name, jobTitle: data.profile.title, url: `${base}${localizePath('/', locale)}` },
       },
     ],
+  }
+}
+
+export function maintenanceHead(data: PortfolioData, locale: Locale = 'en'): HeadData {
+  return {
+    ...homeHead(data, locale),
+    title: `${dict(locale).maintenance.title} · ${data.settings.site_name}`,
+    description: data.settings.maintenance_message,
+    robots: 'noindex',
+    alternates: [],
+    jsonLd: [],
   }
 }
 

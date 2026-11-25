@@ -8,9 +8,10 @@ import { intlLocale, localizePath, useLocale, useLocalePath, useT, type Locale }
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { buildCv } from '@/cv/model'
-import { LebenslaufCv, ModernCv } from '@/cv/templates'
+import { EuropassCv, LebenslaufCv, ModernCv } from '@/cv/templates'
 
-type Template = 'modern' | 'lebenslauf'
+type Template = 'modern' | 'lebenslauf' | 'europass'
+const TEMPLATES: Template[] = ['modern', 'lebenslauf', 'europass']
 const A4_PX = 793.7 // 210mm at 96 dpi
 
 /** Scale the fixed-width A4 sheet down to fit narrow screens (printing always uses 100%). */
@@ -36,7 +37,7 @@ export default function CvPage() {
   const lp = useLocalePath()
   const [params, setParams] = useSearchParams()
   const q = params.get('t')
-  const template: Template = q === 'modern' || q === 'lebenslauf' ? q : locale === 'de' ? 'lebenslauf' : 'modern'
+  const template: Template = TEMPLATES.includes(q as Template) ? (q as Template) : locale === 'de' ? 'lebenslauf' : 'modern'
   const model = useMemo(() => buildCv(data, locale), [data, locale])
   const { ref, zoom } = useFitZoom()
   useHead(cvHead(data, locale))
@@ -53,7 +54,7 @@ export default function CvPage() {
     const name = data.profile.full_name.trim().replace(/\s+/g, '-')
     const before = () => {
       previous = document.title
-      document.title = `${name}-${template === 'lebenslauf' ? 'Lebenslauf' : 'CV'}-${locale.toUpperCase()}`
+      document.title = `${name}-${template === 'lebenslauf' ? 'Lebenslauf' : template === 'europass' ? 'Europass-CV' : 'CV'}-${locale.toUpperCase()}`
     }
     const after = () => {
       if (previous) document.title = previous
@@ -103,7 +104,7 @@ export default function CvPage() {
             <div className="flex items-center gap-2">
               <span className="font-mono text-[0.68rem] tracking-[0.14em] text-dim uppercase">{t.cv.template}</span>
               <div role="group" aria-label={t.cv.template} className="inline-flex rounded-lg border border-line p-0.5">
-                {(['modern', 'lebenslauf'] as const).map((tpl) => (
+                {TEMPLATES.map((tpl) => (
                   <button
                     key={tpl}
                     type="button"
@@ -111,7 +112,7 @@ export default function CvPage() {
                     onClick={() => choose(tpl)}
                     className={cn('rounded-md px-3 py-1.5 text-xs font-medium transition-colors', template === tpl ? 'bg-accent/15 text-accent' : 'text-muted hover:text-fg')}
                   >
-                    {tpl === 'modern' ? t.cv.modern : t.cv.lebenslauf}
+                    {tpl === 'modern' ? t.cv.modern : tpl === 'lebenslauf' ? t.cv.lebenslauf : t.cv.europass}
                   </button>
                 ))}
               </div>
@@ -141,7 +142,7 @@ export default function CvPage() {
 
       <div ref={ref} className="mx-auto max-w-[210mm] overflow-hidden print:max-w-none print:overflow-visible">
         <div className="cv-zoom w-[210mm] shadow-[0_30px_80px_-20px_rgb(0_0_0/0.7)] print:shadow-none" style={{ ['--cv-zoom' as string]: zoom }}>
-          {template === 'modern' ? <ModernCv m={model} /> : <LebenslaufCv m={model} today={today} />}
+          {template === 'modern' ? <ModernCv m={model} /> : template === 'europass' ? <EuropassCv m={model} /> : <LebenslaufCv m={model} today={today} />}
         </div>
       </div>
     </main>

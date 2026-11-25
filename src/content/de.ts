@@ -51,16 +51,17 @@ export const deProfile: T = {
 }
 
 export const deSettings: T = {
-  seo_title: 'Arbab Zafar: Softwareentwickler & Full-Stack-Entwickler',
+  seo_title: 'Arbab Zafar: Softwareentwickler, Ausbildung in Deutschland',
   seo_description:
-    'Arbab Zafar ist Softwareentwickler und Full-Stack-Entwickler in Pakistan und baut Web- und Mobile-Produkte mit React, Next.js, React Native, Angular, Node.js und .NET.',
+    'Full-Stack-Entwickler aus Pakistan (React, Next.js, React Native, Node.js) sucht eine Ausbildung als Fachinformatiker für Anwendungsentwicklung in Deutschland.',
   seo_keywords: [
     'Arbab Zafar',
+    'Ausbildung Fachinformatiker Anwendungsentwicklung',
+    'Ausbildung Deutschland',
+    'Fachinformatiker Anwendungsentwicklung',
     'Arbab Zafar Softwareentwickler',
     'Full-Stack-Entwickler',
     'React Entwickler',
-    'Next.js Entwickler',
-    'MERN Stack Entwickler',
     'React Native Entwickler',
   ],
   maintenance_message: 'Das Portfolio wird gerade aktualisiert. Bitte schauen Sie bald wieder vorbei.',
