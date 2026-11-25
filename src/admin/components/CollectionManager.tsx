@@ -16,6 +16,7 @@ import { deepEqual } from '../lib/paths'
 import { removeFile } from '../lib/storage'
 
 type Row = { id: string; sort_order: number } & Record<string, unknown>
+type OwnedFile = { bucket: 'media' | 'documents'; url: string | null | undefined }
 
 export interface CollectionConfig<T extends Row> {
   table: string
@@ -35,7 +36,7 @@ export interface CollectionConfig<T extends Row> {
   /** Extra editor UI, e.g. a gallery. Receives the saved row (null when creating). */
   editorExtra?: (saved: T | null) => ReactNode
   /** Storage objects owned by a row, removed after the row is deleted. */
-  ownedFiles?: (row: T) => { bucket: 'media' | 'documents'; url: string | null | undefined }[]
+  ownedFiles?: (row: T) => OwnedFile[] | Promise<OwnedFile[]>
   onChanged?: (rows: T[]) => void
 }
 
@@ -123,9 +124,11 @@ export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
   const remove = async (row: T) => {
     const ok = await confirm({ title: `Delete “${cfg.title(row)}”?`, description: `This permanently removes the ${singular.toLowerCase()}.` })
     if (!ok) return
+    // Resolve owned files BEFORE deleting: child rows (e.g. gallery images) cascade away with the row.
+    const owned = (await cfg.ownedFiles?.(row)) ?? []
     const { error } = await requireSupabase().from(table).delete().eq('id', row.id)
     if (error) return toast.error(error.message)
-    for (const f of cfg.ownedFiles?.(row) ?? []) void removeFile(f.bucket, f.url)
+    for (const f of owned) void removeFile(f.bucket, f.url)
     setRows((rs) => rs.filter((r) => r.id !== row.id))
     if (editing?.original?.id === row.id) setEditing(null)
     toast.success(`${singular} deleted`)

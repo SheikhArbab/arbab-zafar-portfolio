@@ -246,6 +246,9 @@ const skillRows: [string, string, string, boolean?][] = [
   ['Netlify', CAT.other, 'netlify'],
   ['cPanel', CAT.other, 'cpanel'],
   ['Responsive Web Design', CAT.other, ''],
+  // appended later; keep at the end so existing ids stay stable
+  ['NativeWind', CAT.mobile, 'tailwindcss'],
+  ['Expo', CAT.mobile, 'expo'],
 ]
 
 export const defaultSkills: Skill[] = skillRows.map(([name, category_id, icon, featured], i) => ({
@@ -401,6 +404,44 @@ export const defaultProjects: Project[] = [
     live_url: 'https://sajholding.netlify.app/',
     repo_url: 'https://github.com/SheikhArbab/sajholding',
     is_featured: true,
+  }),
+  proj(8, {
+    title: 'Simple Meditation (React Native)',
+    slug: 'simple-meditation-app',
+    category: 'Mobile App',
+    status: 'in progress',
+    short_description: 'A React Native meditation app built with Expo Router and NativeWind: a gradient welcome screen and tabbed nature-meditation sessions.',
+    description: [
+      'A mobile app I’m building to practise React Native. Expo Router handles file-based navigation and NativeWind styles the native components with Tailwind classes.',
+      'It has a gradient welcome screen and a tab layout for nature meditations and affirmations. The session player and the affirmations screen are still in progress.',
+    ].join('\n\n'),
+    key_features: [
+      'File-based navigation with Expo Router: welcome screen plus a tab layout (Nature Meditate, Affirmations)',
+      'Tailwind-style styling of native components with NativeWind',
+      'Six nature sessions (Mountains, Rivers, Sunset, Beaches, Starry Night, Waterfall) as image cards in a FlatList',
+      'Reusable gradient background, custom button and header components',
+    ],
+    technologies: ['React Native', 'Expo', 'Expo Router', 'NativeWind', 'TypeScript'],
+    repo_url: 'https://github.com/SheikhArbab/native-meditation',
+  }),
+  proj(9, {
+    title: 'Fitness App (React Native)',
+    slug: 'fitness-app-react-native',
+    category: 'Mobile App',
+    status: 'in progress',
+    short_description: 'A React Native fitness app UI built with Expo Router and NativeWind, with a welcome screen and an animated image carousel.',
+    description: [
+      'A mobile app exploring React Native UI with Expo Router and NativeWind.',
+      'A full-screen welcome screen leads to a home screen with an animated image carousel and layouts sized for different phone screens. The workout content is still in progress.',
+    ].join('\n\n'),
+    key_features: [
+      'Welcome screen with a call to action that navigates to the home screen (Expo Router)',
+      'Animated image carousel built on react-native-reanimated-carousel',
+      'Screen-relative sizing with react-native-responsive-screen',
+      'Tailwind-style styling with NativeWind',
+    ],
+    technologies: ['React Native', 'Expo', 'Expo Router', 'NativeWind', 'Reanimated', 'TypeScript'],
+    repo_url: 'https://github.com/SheikhArbab/fitness-app',
   }),
   proj(1, {
     title: 'MERN Blog Platform',

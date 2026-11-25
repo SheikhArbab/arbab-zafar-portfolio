@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
@@ -19,6 +19,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [recovery, setRecovery] = useState(false)
 
+  // The user whose admin status has already been verified. Supabase re-emits SIGNED_IN when a tab
+  // regains focus; for the same user we must NOT flip back to "loading", which would unmount the
+  // dashboard and throw away unsaved edits in an open editor.
+  const verifiedUser = useRef<string | null>(null)
+
   useEffect(() => {
     if (!supabase) {
       setLoading(false)
@@ -26,14 +31,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const check = async (s: Session | null) => {
       if (!s) {
+        verifiedUser.current = null
         setSession(null)
         setIsAdmin(false)
         setLoading(false)
         return
       }
+      if (verifiedUser.current === s.user.id) {
+        setSession(s) // same user, fresh tokens: no re-verification, no remount
+        return
+      }
       setLoading(true)
       // Authorization is decided by the database (admin_users table), not the client.
       const { data, error } = await supabase!.rpc('is_admin')
+      verifiedUser.current = s.user.id
       setSession(s)
       setIsAdmin(!error && data === true)
       setLoading(false)

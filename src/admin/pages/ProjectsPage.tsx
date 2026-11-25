@@ -137,7 +137,11 @@ export default function ProjectsPage() {
           void _omit
           return row
         }}
-        ownedFiles={(r) => [{ bucket: 'media', url: r.thumbnail_url }, ...(r.project_images ?? []).map((i) => ({ bucket: 'media' as const, url: i.url }))]}
+        ownedFiles={async (r) => {
+          // Read the gallery fresh: images added in this session aren't in the list snapshot.
+          const { data } = await requireSupabase().from('project_images').select('url').eq('project_id', r.id)
+          return [{ bucket: 'media' as const, url: r.thumbnail_url }, ...(data ?? []).map((i) => ({ bucket: 'media' as const, url: i.url as string }))]
+        }}
         editorExtra={(saved) => <Gallery project={saved} />}
         blank={() => ({
           title: '',
