@@ -1,5 +1,17 @@
 @import 'tailwindcss';
 
+/* Liquid glass sheen position (registered so it can glide instead of jumping). */
+@property --lx {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 18%;
+}
+@property --ly {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: -20%;
+}
+
 /* ───────────────────────── Design tokens ─────────────────────────
    Accent colours are runtime-configurable from /admin → Settings
    (applied as --accent / --accent-2 on <html>). */
@@ -110,11 +122,37 @@
   .mask-fade-b {
     mask-image: linear-gradient(to bottom, #000 60%, transparent);
   }
+  /* Liquid glass: saturated blur, a sheen that follows the pointer (--lx/--ly), a bright top edge,
+     a soft rim and inner glow. In Chromium, useLiquidLens() adds real edge refraction on top. */
   .glass {
-    background: var(--panel);
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
-    border: 1px solid var(--line);
+    --glass-blur: 18px;
+    background:
+      radial-gradient(140% 90% at var(--lx, 18%) var(--ly, -20%), rgb(255 255 255 / var(--sheen, 0.09)), transparent 55%),
+      linear-gradient(165deg, rgb(255 255 255 / 0.075), rgb(255 255 255 / 0.012) 40%, rgb(255 255 255 / 0.03)),
+      var(--panel);
+    backdrop-filter: blur(var(--glass-blur)) saturate(185%) brightness(1.06);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(185%) brightness(1.06);
+    border: 1px solid rgb(255 255 255 / 0.1);
+    box-shadow:
+      inset 0 1px 0 0 rgb(255 255 255 / 0.2),
+      inset 0 -1px 0 0 rgb(255 255 255 / 0.045),
+      inset 1px 0 0 0 rgb(255 255 255 / 0.04),
+      inset 0 0 28px 0 rgb(255 255 255 / 0.03),
+      var(--glass-drop, 0 12px 40px -14px rgb(0 0 0 / 0.65));
+    transition: --lx 0.45s ease-out, --ly 0.45s ease-out;
+  }
+  /* Small, clear liquid surfaces (pills, floating buttons): less blur, more refraction shows through. */
+  .glass-clear {
+    --glass-blur: 6px;
+    --sheen: 0.14;
+    --panel: rgb(14 19 20 / 0.28);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .glass {
+      --panel: var(--bg-elev);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
   }
   .text-gradient {
     background: linear-gradient(100deg, var(--accent) 10%, var(--accent-2) 90%);
@@ -184,8 +222,67 @@
     opacity: 0.035;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   }
+  /* Hero: light blobs and floating tiles behind the liquid glass card */
+  .hero-blob {
+    animation: hero-blob 18s ease-in-out infinite;
+    will-change: transform;
+  }
+  .hero-tile {
+    animation: hero-tile 11s ease-in-out infinite;
+  }
+  @keyframes hero-blob {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(9%, -7%) scale(1.08); }
+    66% { transform: translate(-7%, 8%) scale(0.94); }
+  }
+  @keyframes hero-tile {
+    0%, 100% { transform: translate(0, 0) rotate(-5deg); }
+    50% { transform: translate(12px, -16px) rotate(5deg); }
+  }
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: rgb(255 255 255 / 0.15) transparent;
+  }
+}
+
+/* ───────────────────────── CV generator (/cv) ───────────────────────── */
+.cv-zoom {
+  zoom: var(--cv-zoom, 1);
+}
+.cv-sheet {
+  min-height: 297mm;
+  color-scheme: light;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+/* Repeat the sheet's padding (and sidebar colour) on every printed page. */
+.cv-sheet,
+.cv-sheet > * {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  html {
+    background: #fff !important;
+  }
+  body {
+    background: transparent !important;
+  }
+  html[data-cv='modern'] {
+    background: linear-gradient(to right, #eef3f1 64mm, #fff 64mm) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Third-party overlays (e.g. the Netlify badge) live outside the app root. */
+  body > :not(#root) {
+    display: none !important;
+  }
+  .cv-zoom {
+    zoom: 1 !important;
   }
 }

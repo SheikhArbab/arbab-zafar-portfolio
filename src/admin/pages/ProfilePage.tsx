@@ -76,7 +76,7 @@ const groups: FieldGroup[] = [
   },
   {
     title: 'Social links',
-    description: 'Platform controls the icon: github, linkedin, email, portfolio, whatsapp, other.',
+    description: 'Platform controls the icon: github, linkedin, email, portfolio, whatsapp, other. A visible WhatsApp entry with your number (international format, e.g. +92 300 1234567) also turns on the floating WhatsApp chat.',
     fields: [
       {
         name: 'socials',
@@ -91,7 +91,7 @@ const groups: FieldGroup[] = [
             options: ['github', 'linkedin', 'email', 'portfolio', 'whatsapp', 'other'].map((v) => ({ value: v, label: v })),
           },
           { name: 'label', label: 'Label', type: 'text' },
-          { name: 'url', label: 'URL / address', type: 'text', placeholder: 'https://…  (email: leave empty to use public email)' },
+          { name: 'url', label: 'URL / address', type: 'text', placeholder: 'https://…  ·  WhatsApp: +92 300 1234567  ·  email: empty = public email' },
           { name: 'visible', label: 'Visible', type: 'switch' },
         ],
       },
@@ -111,7 +111,53 @@ const groups: FieldGroup[] = [
       { name: 'german.points', label: 'Points', type: 'lines' },
     ],
   },
+  {
+    title: 'CV generator (/cv)',
+    description: 'Optional details for the generated CV. Everything here is public on /cv, and empty fields are simply left off.',
+    translate: ['cv.summary', 'cv.address', 'cv.nationality', 'cv.driving_licence', 'cv.languages', 'cv.interests'],
+    aside: () => <CvLinks />,
+    fields: [
+      { name: 'cv.summary', label: 'CV summary', type: 'textarea', rows: 3, max: 600, help: 'Empty: the About lead paragraph is used.' },
+      { name: 'cv.address', label: 'Location on the CV', type: 'text', max: 120, help: 'e.g. “Islamabad, Pakistan”. Empty: the profile location.' },
+      { name: 'cv.phone', label: 'Phone', type: 'text', max: 40, placeholder: '+92 …' },
+      { name: 'cv.nationality', label: 'Nationality', type: 'text', max: 60 },
+      { name: 'cv.birth_date', label: 'Date of birth', type: 'text', max: 30, help: 'Common on German CVs, but optional.' },
+      { name: 'cv.driving_licence', label: 'Driving licence', type: 'text', max: 40 },
+      {
+        name: 'cv.languages',
+        label: 'Languages',
+        type: 'repeater',
+        itemLabel: 'language',
+        help: 'Empty: German is taken from the “Deutsch lernen” section.',
+        fields: [
+          { name: 'name', label: 'Language', type: 'text', placeholder: 'English' },
+          { name: 'level', label: 'Level', type: 'text', placeholder: 'C1 · fluent' },
+        ],
+      },
+      { name: 'cv.interests', label: 'Interests', type: 'tags' },
+      { name: 'cv.show_photo', label: 'Show profile photo on the CV', type: 'switch' },
+      { name: 'cv.show_qr', label: 'Show a QR code to the portfolio', type: 'switch' },
+    ],
+  },
 ]
+
+function CvLinks() {
+  return (
+    <div className="space-y-2 rounded-xl border border-line p-4 text-sm">
+      <p className="font-mono text-[0.7rem] tracking-[0.14em] text-muted uppercase">Preview</p>
+      {[
+        ['/cv?t=modern', 'Modern CV (English)'],
+        ['/de/cv?t=lebenslauf', 'Lebenslauf (Deutsch)'],
+        ['/cv?t=lebenslauf', 'German-style CV in English'],
+      ].map(([href, label]) => (
+        <a key={href} href={href} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-lg px-2 py-1.5 text-fg hover:bg-white/5">
+          {label} <span className="font-mono text-xs text-accent">↗</span>
+        </a>
+      ))}
+      <p className="pt-1 text-xs text-dim">Shows saved changes. Visitors save it as a PDF from the page.</p>
+    </div>
+  )
+}
 
 export default function ProfilePage() {
   return (

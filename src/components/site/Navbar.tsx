@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { AnimatePresence, m } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
@@ -7,6 +7,7 @@ import { navSections } from '@/data/sections'
 import { cn, pad } from '@/lib/utils'
 import { SectionLink } from './SectionLink'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import { useLiquidLens } from '@/lib/liquidGlass'
 import { useLocalePath, useT } from '@/i18n'
 
 export function BrandMark({ className }: { className?: string }) {
@@ -48,6 +49,9 @@ export function Navbar() {
   const [active, setActive] = useState('home')
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const bar = useRef<HTMLDivElement>(null)
+  // Refract only once the bar turns into glass (at the top of the page it is transparent).
+  useLiquidLens(bar, { strength: 14, bezel: 16, blur: 8, enabled: scrolled || open })
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
@@ -88,12 +92,13 @@ export function Navbar() {
   }, [])
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50">
+    <header className="fixed inset-x-0 top-0 z-50 print:hidden">
       <div
+        ref={bar}
         className={cn(
           'mx-auto mt-3 flex h-14 max-w-6xl items-center justify-between rounded-xl px-3 transition-all duration-300 sm:px-4',
           'mx-3 sm:mx-6 lg:mx-auto',
-          scrolled || open ? 'glass shadow-[0_12px_40px_-20px_rgba(0,0,0,0.8)]' : 'border border-transparent',
+          scrolled || open ? 'glass [--glass-drop:0_12px_40px_-20px_rgb(0_0_0/0.8)]' : 'border border-transparent',
         )}
       >
         <BrandMark />

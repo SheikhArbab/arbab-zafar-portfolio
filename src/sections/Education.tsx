@@ -5,18 +5,15 @@ import { SectionHeading } from '@/components/site/SectionHeading'
 import { Reveal } from '@/components/site/Reveal'
 import { SpotlightCard } from '@/components/site/SpotlightCard'
 import type { EducationKind } from '@/types/content'
+import { useT } from '@/i18n'
 
-const meta: Record<EducationKind, { label: string; Icon: typeof GraduationCap }> = {
-  education: { label: 'Education', Icon: GraduationCap },
-  certification: { label: 'Certification', Icon: Award },
-  course: { label: 'Course', Icon: BookOpen },
-  training: { label: 'Training', Icon: Wrench },
-}
+const icons: Record<EducationKind, typeof GraduationCap> = { education: GraduationCap, certification: Award, course: BookOpen, training: Wrench }
 
 export function Education({ index }: { index: number }) {
   const { data } = usePortfolio()
   const copy = data.settings.content.education
   const items = data.education
+  const t = useT().education
 
   return (
     <section id="education" aria-labelledby="education-title" className="relative py-24 md:py-32">
@@ -24,7 +21,8 @@ export function Education({ index }: { index: number }) {
         <SectionHeading id="education-title" index={index} eyebrow={copy.eyebrow} heading={copy.heading} description={copy.description} />
         <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {items.map((e, i) => {
-            const { label, Icon } = meta[e.kind] ?? meta.education
+            const Icon = icons[e.kind] ?? GraduationCap
+            const label = t.kinds[e.kind] ?? t.kinds.education
             const cred = safeUrl(e.credential_url)
             const cert = safeUrl(e.certificate_url)
             return (
@@ -45,12 +43,12 @@ export function Education({ index }: { index: number }) {
                       <div className="mt-4 flex flex-wrap gap-3 font-mono text-xs">
                         {cred && (
                           <a href={cred} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-accent hover:underline">
-                            <ExternalLink className="h-3.5 w-3.5" /> verify credential
+                            <ExternalLink className="h-3.5 w-3.5" /> {t.verify}
                           </a>
                         )}
                         {cert && (
                           <a href={cert} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-accent-2 hover:underline">
-                            <FileText className="h-3.5 w-3.5" /> certificate
+                            <FileText className="h-3.5 w-3.5" /> {t.certificate}
                           </a>
                         )}
                       </div>

@@ -20,7 +20,7 @@ export function Footer() {
     .filter((s) => s.visible && safeUrl(socialHref(s.platform, s.url)))
 
   return (
-    <footer className="relative border-t border-line">
+    <footer className="relative border-t border-line print:hidden">
       <div className="mx-auto grid grid-cols-1 max-w-6xl gap-10 px-5 py-14 sm:px-8 md:grid-cols-[1.4fr_1fr_auto]">
         <div>
           <BrandMark />
@@ -57,6 +57,11 @@ export function Footer() {
                 </Link>
               </li>
             )}
+            <li>
+              <Link to={lp('/cv')} className="text-muted transition-colors hover:text-fg">
+                {t.footer.cv}
+              </Link>
+            </li>
           </ul>
         </nav>
         <div className="flex items-start md:justify-end">

@@ -42,6 +42,25 @@ export interface GermanInfo {
   points: string[]
 }
 
+export interface CvLanguage {
+  name: string
+  level: string
+}
+
+/** Extra details used only by the CV generator (/cv). All optional; empty fields are left off the CV. */
+export interface CvInfo {
+  summary: string
+  phone: string
+  address: string
+  nationality: string
+  birth_date: string
+  driving_licence: string
+  languages: CvLanguage[]
+  interests: string[]
+  show_photo: boolean
+  show_qr: boolean
+}
+
 export interface Profile {
   translations?: Translations
   id: number
@@ -67,6 +86,7 @@ export interface Profile {
   about_image_url: string | null
   socials: SocialLink[]
   german: GermanInfo
+  cv: CvInfo
   updated_at?: string
 }
 

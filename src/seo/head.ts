@@ -206,6 +206,31 @@ export function playgroundHead(data: PortfolioData, locale: Locale = 'en'): Head
   }
 }
 
+export function cvHead(data: PortfolioData, locale: Locale = 'en'): HeadData {
+  const base = siteUrl(data)
+  const home = homeHead(data, locale)
+  const t = dict(locale).cv
+  const name = data.profile.full_name
+  return {
+    ...home,
+    title: t.pageTitle(name),
+    description: t.pageDesc(name),
+    canonical: `${base}${localizePath('/cv', locale)}`,
+    alternates: alternatesFor(base, '/cv'),
+    type: 'profile',
+    jsonLd: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'ProfilePage',
+        url: `${base}${localizePath('/cv', locale)}`,
+        name: t.pageTitle(name),
+        inLanguage: locale,
+        mainEntity: { '@type': 'Person', name, jobTitle: data.profile.title, url: `${base}${localizePath('/', locale)}` },
+      },
+    ],
+  }
+}
+
 export function notFoundHead(data: PortfolioData, locale: Locale = 'en'): HeadData {
   return { ...homeHead(data, locale), title: `${dict(locale).seo.notFound} · ${data.settings.site_name}`, robots: 'noindex', canonical: '', alternates: [], jsonLd: [] }
 }

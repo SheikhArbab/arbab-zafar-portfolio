@@ -12,7 +12,7 @@ const variants: Record<Variant, string> = {
   primary:
     'bg-accent text-black hover:shadow-[0_0_0_1px_var(--accent),0_0_28px_-4px_var(--accent)] hover:-translate-y-px active:translate-y-0',
   outline:
-    'border border-line-strong bg-white/[0.02] text-fg hover:border-accent/60 hover:bg-accent/[0.06] hover:text-white',
+    'glass glass-clear text-fg [--glass-drop:0_8px_24px_-12px_rgb(0_0_0/0.6)] hover:border-accent/60 hover:text-white hover:[--panel:color-mix(in_oklab,var(--accent)_9%,transparent)]',
   ghost: 'text-muted hover:text-fg hover:bg-white/[0.05]',
   subtle: 'bg-white/[0.06] text-fg hover:bg-white/[0.1]',
   danger: 'bg-red-500/90 text-white hover:bg-red-500',

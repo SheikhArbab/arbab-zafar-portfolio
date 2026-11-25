@@ -8,7 +8,7 @@ const bySort = <T extends { sort_order: number }>(a: T, b: T) => a.sort_order - 
 export function mergeProfile(row: Partial<Profile> | null | undefined): Profile {
   const d = defaultData.profile
   if (!row) return d
-  return { ...d, ...stripNulls(row), german: { ...d.german, ...(row.german ?? {}) } } as Profile
+  return { ...d, ...stripNulls(row), german: { ...d.german, ...(row.german ?? {}) }, cv: { ...d.cv, ...(row.cv ?? {}) } } as Profile
 }
 
 export function mergeSettings(row: Partial<SiteSettings> | null | undefined): SiteSettings {

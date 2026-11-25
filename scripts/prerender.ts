@@ -47,7 +47,7 @@ function write(rel: string, content: string) {
 
 // Pages (English at the root, German under /de) ---------------------------------
 const hasPlayground = data.settings.sections.playground !== false
-const paths = ['/', ...data.projects.map((p) => `/projects/${p.slug}`), ...(hasPlayground ? ['/playground'] : [])]
+const paths = ['/', ...data.projects.map((p) => `/projects/${p.slug}`), ...(hasPlayground ? ['/playground'] : []), '/cv']
 for (const path of paths) {
   write(path === '/' ? 'index.html' : `${path.slice(1)}.html`, page(path))
   const de = path === '/' ? '/de' : `/de${path}`
@@ -74,6 +74,7 @@ const lastmod = (d?: string) => (d ? `\n    <lastmod>${new Date(d).toISOString()
 const entries: { path: string; updated?: string; freq: string; priority: string }[] = [
   { path: '/', updated: data.profile.updated_at, freq: 'weekly', priority: '1.0' },
   ...(hasPlayground ? [{ path: '/playground', freq: 'yearly', priority: '0.3' }] : []),
+  { path: '/cv', updated: data.profile.updated_at, freq: 'monthly', priority: '0.6' },
   ...data.projects.map((p) => ({ path: `/projects/${p.slug}`, updated: p.updated_at, freq: 'monthly', priority: '0.7' })),
 ]
 const enUrl = (path: string) => `${siteUrl}${path}`

@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { m } from 'framer-motion'
-import { ArrowDown, ArrowUpRight, ChevronDown, Download, MapPin } from 'lucide-react'
+import { ArrowDown, ArrowUpRight, ChevronDown, Download, FileText, MapPin } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { usePortfolio } from '@/data/PortfolioContext'
 import { useMotionLevel } from '@/lib/motion'
 import { useTypewriter } from '@/lib/useTypewriter'
@@ -8,8 +9,8 @@ import { safeUrl } from '@/lib/utils'
 import { Button, LinkButton } from '@/components/ui/Button'
 import { SocialIcon, socialHref } from '@/components/ui/BrandIcons'
 import { Terminal } from '@/components/site/Terminal'
-import { HeroVisual } from '@/components/three/HeroVisual'
-import { useLocale, useT } from '@/i18n'
+import { HeroCard } from '@/components/site/HeroCard'
+import { useLocale, useLocalePath, useT } from '@/i18n'
 
 function Heading({ text, highlight }: { text: string; highlight: string }) {
   // Split heading into words; highlight the configured word/phrase. Each word reveals in sequence.
@@ -44,6 +45,7 @@ function CvMenu({ label }: { label: string }) {
   const { data } = usePortfolio()
   const t = useT()
   const locale = useLocale()
+  const lp = useLocalePath()
   const cvs = data.documents.filter((d) => (d.kind === 'cv_en' || d.kind === 'cv_de') && safeUrl(d.file_url))
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -65,10 +67,10 @@ function CvMenu({ label }: { label: string }) {
       document.removeEventListener('keydown', onKey)
     }
   }, [])
-  if (!cvs.length) return null
-  if (cvs.length === 1)
+  // No uploaded PDF: the generated CV is the download.
+  if (!cvs.length)
     return (
-      <LinkButton variant="outline" size="lg" href={cvs[0].file_url} download>
+      <LinkButton variant="outline" size="lg" to={lp('/cv')}>
         <Download className="h-4 w-4" /> {label}
       </LinkButton>
     )
@@ -96,6 +98,15 @@ function CvMenu({ label }: { label: string }) {
                 <span className="font-mono text-[0.65rem] text-accent">{d.kind === 'cv_de' ? 'DE' : 'EN'}</span>
               </a>
             ))}
+          <Link
+            role="menuitem"
+            to={lp('/cv')}
+            onClick={() => setOpen(false)}
+            className="mt-1 flex items-center justify-between rounded-md border-t border-line px-3 py-2 text-sm text-fg hover:bg-white/5"
+          >
+            {t.cv.toolbarTitle}
+            <FileText className="h-3.5 w-3.5 text-accent" />
+          </Link>
         </div>
       )}
     </div>
@@ -206,20 +217,14 @@ export function Hero() {
           )}
         </div>
 
-        {/* 3D core + terminal */}
+        {/* Liquid glass profile card + terminal */}
         <div className="relative">
-          <div className="relative mx-auto aspect-square w-full max-w-[560px] lg:-mr-10 lg:max-w-none">
-            <HeroVisual accent={settings.accent_primary} accent2={settings.accent_secondary} enabled={settings.enable_3d} motion={level} />
-            <div aria-hidden className="absolute top-6 left-4 font-mono text-[0.62rem] leading-5 text-dim sm:left-8">
-              <p>sys.core // online</p>
-              <p className="text-accent/70">render: realtime</p>
-            </div>
-          </div>
+          <HeroCard animate={level !== 'off'} />
           <m.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-10 -mt-24 w-full sm:mx-auto sm:max-w-md lg:absolute lg:right-0 lg:-bottom-8 lg:mt-0 lg:w-[400px]"
+            className="relative z-20 -mt-6 w-full sm:mx-auto sm:max-w-md lg:absolute lg:right-0 lg:bottom-0 lg:mt-0 lg:w-[330px]"
           >
             <Terminal animate={level === 'full'} />
           </m.div>

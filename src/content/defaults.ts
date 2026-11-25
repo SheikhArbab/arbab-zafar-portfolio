@@ -9,7 +9,7 @@ import type {
   Skill,
   SkillCategory,
 } from '../types/content.ts'
-import { deCategories, deExperiences, deProfile, deProjects, deSettings } from './de.ts'
+import { deCategories, deEducation, deExperiences, deProfile, deProjects, deSettings } from './de.ts'
 
 /**
  * Default content.
@@ -195,6 +195,18 @@ export const defaultProfile: Profile = {
       'Ziel: Ausbildung Fachinformatiker für Anwendungsentwicklung',
       'Next milestone: B1 → B2',
     ],
+  },
+  cv: {
+    summary: '',
+    phone: '',
+    address: '',
+    nationality: '',
+    birth_date: '',
+    driving_licence: '',
+    languages: [],
+    interests: [],
+    show_photo: true,
+    show_qr: true,
   },
   translations: { de: deProfile },
 }
@@ -515,7 +527,31 @@ export const defaultProjects: Project[] = [
   }),
 ].map((p, i) => ({ ...p, sort_order: i, translations: deProjects[p.slug] ? { de: deProjects[p.slug] } : {} }))
 
-export const defaultEducation: Education[] = []
+// Institution, board and years are not known yet: they are added in /admin → Education, never guessed.
+const edu = (i: number, key: string, e: Pick<Education, 'title' | 'date_label' | 'description'>): Education => ({
+  id: `00000000-0000-4000-8000-${String(4000 + i).padStart(12, '0')}`,
+  kind: 'education',
+  institution: '',
+  certificate_url: null,
+  credential_url: '',
+  sort_order: i,
+  is_visible: true,
+  ...e,
+  translations: deEducation[key] ? { de: deEducation[key] } : {},
+})
+
+export const defaultEducation: Education[] = [
+  edu(0, 'intermediate', {
+    title: 'Intermediate (HSSC)',
+    date_label: 'In progress',
+    description: 'Currently studying for the Higher Secondary School Certificate (Intermediate), Pakistan.',
+  }),
+  edu(1, 'matric', {
+    title: 'Matric (SSC)',
+    date_label: 'Completed',
+    description: 'Secondary School Certificate (Matric), Pakistan.',
+  }),
+]
 
 export const defaultData: PortfolioData = {
   profile: defaultProfile,

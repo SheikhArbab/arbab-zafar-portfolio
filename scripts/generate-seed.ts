@@ -26,7 +26,7 @@ function insert(table: string, rows: Record<string, unknown>[], conflict = 'id')
   return `insert into public.${table} (${cols.join(', ')}) values\n${values}\non conflict (${conflict}) do nothing;\n`
 }
 
-const { profile, settings, categories, skills, experiences } = defaultData
+const { profile, settings, categories, skills, experiences, education } = defaultData
 const projects = defaultProjects // includes unpublished drafts
 const omit = <T extends object>(o: T, keys: string[]) => Object.fromEntries(Object.entries(o).filter(([k]) => !keys.includes(k)))
 
@@ -40,6 +40,7 @@ const sql = [
   insert('skills', skills.map((s) => omit(s, ['updated_at']))),
   insert('experiences', experiences.map((e) => omit(e, ['updated_at', 'created_at']))),
   insert('projects', projects.map((p) => omit(p, ['project_images', 'updated_at', 'created_at']))),
+  insert('education', education.map((e) => omit(e, ['updated_at']))),
   // Admin-only (RLS): where new contact-form messages are emailed. Kept out of src/ so it never reaches the browser bundle.
   insert('private_settings', [{ id: 1, notify_email: 'arbabzafar4444@gmail.com', notify_enabled: true }]),
 ].join('\n')

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { PortfolioProvider, usePortfolio } from '@/data/PortfolioContext'
 import { PublicLayout } from '@/components/site/PublicLayout'
@@ -14,6 +14,24 @@ import type { PortfolioData } from '@/types/content'
 
 // The admin dashboard is a separate chunk: never downloaded by regular visitors.
 const AdminApp = lazy(() => import('@/admin/AdminApp'))
+// The CV generator (templates + QR encoder) only loads on /cv.
+const CvPage = lazy(() => import('@/pages/CvPage'))
+
+const noop = () => () => {}
+/**
+ * The CV page is client-only: the server (and the hydration pass) render the loader, then the lazy
+ * chunk loads. Rendering the lazy page during hydration would make React discard the server HTML (#419).
+ */
+function CvRoute() {
+  const hydrated = useSyncExternalStore(noop, () => true, () => false)
+  return hydrated ? (
+    <Suspense fallback={<PageLoader />}>
+      <CvPage />
+    </Suspense>
+  ) : (
+    <PageLoader />
+  )
+}
 
 function PublicApp() {
   const { data, ready } = usePortfolio()
@@ -35,6 +53,7 @@ function PublicApp() {
           <Route key={`${prefix}home`} path={prefix || '/'} element={<Home />} />,
           <Route key={`${prefix}project`} path={`${prefix}/projects/:slug`} element={<ProjectPage />} />,
           data.settings.sections.playground && <Route key={`${prefix}play`} path={`${prefix}/playground`} element={<Playground />} />,
+          <Route key={`${prefix}cv`} path={`${prefix}/cv`} element={<CvRoute />} />,
         ])}
         <Route path="*" element={<NotFound />} />
       </Routes>

@@ -126,6 +126,18 @@ export const deExperiences: T[] = [
   },
 ]
 
+/** Keyed by education id suffix. */
+export const deEducation: Record<string, T> = {
+  intermediate: {
+    date_label: 'Laufend',
+    description: 'Aktuell: Higher Secondary School Certificate (Intermediate), Pakistan.',
+  },
+  matric: {
+    date_label: 'Abgeschlossen',
+    description: 'Secondary School Certificate (Matric), Pakistan.',
+  },
+}
+
 /** Keyed by category slug. */
 export const deCategories: Record<string, T> = {
   frontend: { description: 'Oberflächen & Web-Apps' },

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { AnimatePresence, m } from 'framer-motion'
-import { AlertTriangle, ArrowUpRight, CheckCircle2, Download, Send } from 'lucide-react'
+import { AlertTriangle, ArrowUpRight, CheckCircle2, Download, FileText, Send } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { usePortfolio } from '@/data/PortfolioContext'
 import { normalizeContact, validateContact, type ContactErrors, type ContactInput } from '@/lib/contact'
 import { cn, safeUrl } from '@/lib/utils'
@@ -10,7 +11,7 @@ import { Button } from '@/components/ui/Button'
 import { FieldError, Input, Label, Textarea } from '@/components/ui/Field'
 import { SocialIcon, socialHref } from '@/components/ui/BrandIcons'
 import { Spinner } from '@/components/ui/Spinner'
-import { useLocale, useT } from '@/i18n'
+import { useLocale, useLocalePath, useT } from '@/i18n'
 
 type Status = 'idle' | 'sending' | 'success' | 'error'
 type Errors = ContactErrors
@@ -57,6 +58,7 @@ export function Contact({ index }: { index: number }) {
   const { profile, settings, documents } = data
   const t = useT()
   const T = t.contact
+  const lp = useLocalePath()
   const locale = useLocale()
   const copy = settings.content.contact
   const [values, setValues] = useState<ContactInput>({ name: '', email: '', subject: '', message: '' })
@@ -173,8 +175,7 @@ export function Contact({ index }: { index: number }) {
               })}
             </ul>
 
-            {cvs.length > 0 && (
-              <div className="mt-6 flex flex-wrap gap-2">
+            <div className="mt-6 flex flex-wrap gap-2">
                 {cvs.map((d) => (
                   <a
                     key={d.id}
@@ -187,8 +188,14 @@ export function Contact({ index }: { index: number }) {
                     {d.kind === 'cv_de' ? T.resumeDe : T.resumeEn}
                   </a>
                 ))}
+                <Link
+                  to={lp('/cv')}
+                  className="inline-flex items-center gap-2 rounded-lg border border-line-strong px-3 py-2 font-mono text-xs text-fg hover:border-accent/50 hover:text-accent"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  {t.cv.toolbarTitle}
+                </Link>
               </div>
-            )}
           </div>
 
           <Reveal>

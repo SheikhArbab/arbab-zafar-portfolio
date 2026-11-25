@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type MouseEvent, type ReactNode } from 'react'
 import { m } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { usePortfolio } from '@/data/PortfolioContext'
 import { useLocalePath, useT } from '@/i18n'
 import { cn } from '@/lib/utils'
+import { useLiquidLens } from '@/lib/liquidGlass'
 
 /**
  * A decorative, sandboxed "terminal". It only understands a fixed list of
@@ -29,6 +30,8 @@ export function Terminal({ className, animate = true }: { className?: string; an
   const body = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   const input = useRef<HTMLInputElement>(null)
+  const frame = useRef<HTMLDivElement>(null)
+  useLiquidLens(frame, { strength: 22, bezel: 26, blur: 10 })
 
   useEffect(() => {
     body.current?.scrollTo({ top: body.current.scrollHeight, behavior: 'smooth' })
@@ -90,13 +93,25 @@ export function Terminal({ className, animate = true }: { className?: string; an
       help: T.help.cv,
       run: () => {
         const cvs = documents.filter((d) => d.kind === 'cv_en' || d.kind === 'cv_de')
-        if (!cvs.length) return print(T.noCv)
+        if (!cvs.length) {
+          // Nothing uploaded: open the generated CV instead.
+          print(T.openingCv)
+          setTimeout(() => navigate(lp('/cv')), 350)
+          return
+        }
+        const openGenerator = (e: MouseEvent) => {
+          e.preventDefault()
+          navigate(lp('/cv'))
+        }
         print(
           ...cvs.map((d) => (
             <a key={d.id} className="text-accent-2 underline underline-offset-2" href={d.file_url} target="_blank" rel="noopener noreferrer">
               {d.kind === 'cv_de' ? T.cvDe : T.cvEn}: {d.file_name || 'download'}
             </a>
           )),
+          <a key="generator" className="text-accent-2 underline underline-offset-2" href={lp('/cv')} onClick={openGenerator}>
+            {T.cvGenerator}
+          </a>,
         )
       },
     },
@@ -151,7 +166,8 @@ export function Terminal({ className, animate = true }: { className?: string; an
 
   return (
     <div
-      className={cn('glass overflow-hidden rounded-xl font-mono text-[0.78rem] shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)]', className)}
+      ref={frame}
+      className={cn('glass overflow-hidden rounded-xl font-mono text-[0.78rem] [--glass-drop:0_30px_80px_-30px_rgb(0_0_0/0.9)]', className)}
       onClick={() => input.current?.focus({ preventScroll: true })}
     >
       <div className="flex items-center gap-2 border-b border-line bg-white/[0.02] px-3.5 py-2.5">

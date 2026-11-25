@@ -174,7 +174,7 @@ export function SingletonEditor({ table, groups, onSaved, footer }: Props) {
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
-            className="glass fixed right-4 bottom-4 left-4 z-40 flex items-center justify-between gap-3 rounded-xl px-4 py-3 shadow-2xl lg:left-[calc(16rem+1.5rem)]"
+            className="glass fixed right-4 bottom-4 left-4 z-40 flex items-center justify-between gap-3 rounded-xl px-4 py-3 [--glass-drop:0_25px_50px_-12px_rgb(0_0_0/0.6)] lg:left-[calc(16rem+1.5rem)]"
           >
             <p className="text-sm text-amber-300">● You have unsaved changes</p>
             <div className="flex gap-2">

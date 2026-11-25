@@ -6,6 +6,8 @@ import { useMotionLevel } from '@/lib/motion'
 import { useT } from '@/i18n'
 import { Navbar } from './Navbar'
 import { Footer } from './Footer'
+import { WhatsAppChat } from './WhatsAppChat'
+import { useGlassSheen } from '@/lib/liquidGlass'
 
 export function useAccentVars() {
   const { data } = usePortfolio()
@@ -21,6 +23,7 @@ export function useAccentVars() {
 export function PublicLayout({ children }: { children: ReactNode }) {
   const { data } = usePortfolio()
   useAccentVars()
+  useGlassSheen()
   const level = useMotionLevel(data.settings.animation_level)
   const { pathname, hash } = useLocation()
   const t = useT()
@@ -36,12 +39,13 @@ export function PublicLayout({ children }: { children: ReactNode }) {
       </a>
       <div className="relative min-h-screen">
         {/* Global ambient backdrop */}
-        <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
+        <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 print:hidden">
           <div className="absolute inset-0 bg-[radial-gradient(1200px_600px_at_80%_-10%,color-mix(in_oklab,var(--accent-2)_7%,transparent),transparent_60%),radial-gradient(900px_500px_at_0%_10%,color-mix(in_oklab,var(--accent)_6%,transparent),transparent_60%)]" />
         </div>
         <Navbar />
         {children}
         <Footer />
+        <WhatsAppChat />
       </div>
     </MotionConfig>
   )

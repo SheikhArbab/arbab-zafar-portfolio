@@ -7,7 +7,7 @@ import App from './App'
 const loadFeatures = () => import('./lib/motionFeatures').then((r) => r.default)
 import { fetchPortfolio } from './data/fetchPortfolio'
 import { defaultData } from './content/defaults'
-import { homeHead, playgroundHead, projectHead, renderHeadTags } from './seo/head'
+import { cvHead, homeHead, playgroundHead, projectHead, renderHeadTags } from './seo/head'
 import { isSupabaseConfigured } from './lib/env'
 import { localeFromPath, stripLocale } from './i18n/paths'
 import { localizeData } from './i18n/localize'
@@ -39,7 +39,13 @@ export function render(url: string, data: PortfolioData) {
   const slug = path.startsWith('/projects/') ? path.split('/')[2] : null
   const project = slug ? local.projects.find((p) => p.slug === slug) : null
   const head = renderHeadTags(
-    project ? projectHead(local, project, locale) : path === '/playground' ? playgroundHead(local, locale) : homeHead(local, locale),
+    project
+      ? projectHead(local, project, locale)
+      : path === '/playground'
+        ? playgroundHead(local, locale)
+        : path === '/cv'
+          ? cvHead(local, locale)
+          : homeHead(local, locale),
   )
   return { html, head, locale }
 }
