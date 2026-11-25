@@ -60,7 +60,9 @@ export function Navbar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onHome, sections.map((s) => s.id).join()])
 
-  useEffect(() => setOpen(false), [pathname])
+  useEffect(() => {
+    setOpen(false)
+  }, [pathname])
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
   }, [open])

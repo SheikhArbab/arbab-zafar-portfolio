@@ -30,8 +30,12 @@ export default function Playground() {
   const fromUrl = params.get('game')
   const current: GameKey = mounted && isGame(fromUrl) ? fromUrl : 'typing'
   useHead(playgroundHead(data))
-  useEffect(() => setMounted(true), [])
-  useEffect(() => setBest(readBest()), [current])
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  useEffect(() => {
+    setBest(readBest())
+  }, [current])
 
   const Game = games[current].Comp
   const bestLabel = (k: GameKey) => {

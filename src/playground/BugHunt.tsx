@@ -39,7 +39,9 @@ export default function BugHunt() {
   const scoreRef = useRef(0)
   const cellsRef = useRef<(Spawn | null)[]>(Array(CELLS).fill(null))
 
-  useEffect(() => setBest(readBest().bugs), [])
+  useEffect(() => {
+    setBest(readBest().bugs)
+  }, [])
 
   const end = useCallback(() => {
     setStatus('done')

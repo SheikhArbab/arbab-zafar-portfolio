@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom'
 import { PortfolioProvider, usePortfolio } from '@/data/PortfolioContext'
 import { PublicLayout } from '@/components/site/PublicLayout'
 import { PageLoader } from '@/components/site/PageLoader'
+import { ErrorBoundary } from '@/components/site/ErrorBoundary'
 import { rpcAsUser, storedAccessToken } from '@/lib/rest'
 import Home from '@/pages/Home'
 import ProjectPage from '@/pages/ProjectPage'
@@ -40,22 +41,33 @@ function PublicApp() {
 }
 
 export default function App({ initialData }: { initialData?: PortfolioData | null }) {
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem('az-chunk-reload')
+    } catch {
+      /* storage unavailable */
+    }
+  }, [])
   return (
     <Routes>
       <Route
         path="/admin/*"
         element={
-          <Suspense fallback={<PageLoader label="booting admin" />}>
-            <AdminApp />
-          </Suspense>
+          <ErrorBoundary area="admin">
+            <Suspense fallback={<PageLoader label="booting admin" />}>
+              <AdminApp />
+            </Suspense>
+          </ErrorBoundary>
         }
       />
       <Route
         path="*"
         element={
-          <PortfolioProvider initialData={initialData}>
-            <PublicApp />
-          </PortfolioProvider>
+          <ErrorBoundary area="portfolio">
+            <PortfolioProvider initialData={initialData}>
+              <PublicApp />
+            </PortfolioProvider>
+          </ErrorBoundary>
         }
       />
     </Routes>

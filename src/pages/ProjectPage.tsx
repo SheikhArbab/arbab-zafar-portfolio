@@ -108,7 +108,9 @@ export default function ProjectPage() {
   const project = data.projects[i]
   const [lightbox, setLightbox] = useState<number | null>(null)
   useHead(project ? projectHead(data, project) : null)
-  useEffect(() => window.scrollTo(0, 0), [slug])
+  useEffect(() => {
+    window.scrollTo(0, 0) // block body: scrollTo returns a Promise in new Chrome; never return it as a cleanup
+  }, [slug])
 
   if (!project) return ready ? <NotFound /> : <PageLoader />
 

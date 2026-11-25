@@ -62,7 +62,9 @@ export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
   useEffect(() => {
     void load()
   }, [load])
-  useEffect(() => cfg.onChanged?.(rows), [rows]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    cfg.onChanged?.(rows)
+  }, [rows]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const dirty = Boolean(editing && !deepEqual(editing.draft, editing.baseline))
   useTrackDirty(`collection:${table}`, dirty)

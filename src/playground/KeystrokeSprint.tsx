@@ -56,7 +56,9 @@ export default function KeystrokeSprint() {
   const startedAt = useRef(0)
   const input = useRef<HTMLInputElement>(null)
 
-  useEffect(() => setBest(readBest().typing), [])
+  useEffect(() => {
+    setBest(readBest().typing)
+  }, [])
 
   const target = queue[line % queue.length]
   const doneChars = useRef(0) // chars from completed lines

@@ -57,7 +57,9 @@ export default function StackMatch() {
   const [best, setBest] = useState<number | undefined>(undefined)
   const lock = useRef(false)
 
-  useEffect(() => setBest(readBest().memory), [])
+  useEffect(() => {
+    setBest(readBest().memory)
+  }, [])
 
   useEffect(() => {
     if (!running) return

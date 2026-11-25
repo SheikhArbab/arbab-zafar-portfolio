@@ -89,7 +89,9 @@ export function Hero() {
   const { profile, settings } = data
   const level = useMotionLevel(settings.animation_level)
   const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   const role = useTypewriter(profile.hero_roles, mounted && level === 'full')
   const socials = profile.socials.filter((s) => s.visible && ['github', 'linkedin'].includes(s.platform) && safeUrl(s.url))
   const c = settings.content.hero
