@@ -6,7 +6,7 @@ import { playgroundHead } from '@/seo/head'
 import { useHead } from '@/seo/useHead'
 import { cn } from '@/lib/utils'
 import { PageLoader } from '@/components/site/PageLoader'
-import { readBest } from '@/playground/scores'
+import { BEST_EVENT, readBest } from '@/playground/scores'
 
 // Each game is its own small chunk, fetched only when opened.
 const games = {
@@ -35,6 +35,11 @@ export default function Playground() {
   }, [])
   useEffect(() => {
     setBest(readBest())
+    const onBest = () => {
+      setBest(readBest())
+    }
+    window.addEventListener(BEST_EVENT, onBest)
+    return () => window.removeEventListener(BEST_EVENT, onBest)
   }, [current])
 
   const Game = games[current].Comp
@@ -54,15 +59,31 @@ export default function Playground() {
         <h1 className="mt-4 text-4xl font-semibold tracking-tight text-balance text-white md:text-6xl">{copy.heading}</h1>
         {copy.description && <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">{copy.description}</p>}
 
-        <div role="tablist" aria-label="Choose a game" className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div
+          role="tablist"
+          aria-label="Choose a game"
+          className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3"
+          onKeyDown={(e) => {
+            if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
+            const keys = Object.keys(games) as GameKey[]
+            const next = keys[(keys.indexOf(current) + (e.key === 'ArrowRight' ? 1 : -1) + keys.length) % keys.length]
+            setParams({ game: next }, { replace: true })
+            setTimeout(() => {
+              document.getElementById(`game-tab-${next}`)?.focus()
+            }, 0)
+          }}
+        >
           {(Object.keys(games) as GameKey[]).map((k) => {
             const { name, blurb, Icon } = games[k]
             const active = k === current
             return (
               <button
                 key={k}
+                id={`game-tab-${k}`}
                 role="tab"
                 aria-selected={active}
+                aria-controls="game-panel"
+                tabIndex={active ? 0 : -1}
                 onClick={() => setParams({ game: k }, { replace: true })}
                 className={cn(
                   'group rounded-2xl border p-4 text-left transition-colors',
@@ -80,7 +101,7 @@ export default function Playground() {
           })}
         </div>
 
-        <section aria-label={games[current].name} className="mt-6">
+        <section id="game-panel" role="tabpanel" aria-labelledby={`game-tab-${current}`} className="mt-6">
           {mounted ? (
             <Suspense fallback={<PageLoader label={`loading ${games[current].name.toLowerCase()}`} />}>
               <Game key={current} />

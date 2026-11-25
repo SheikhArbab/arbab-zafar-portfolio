@@ -72,7 +72,7 @@ export function Projects({ index }: { index: number }) {
             <div className="mb-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="mb-3 font-mono text-xs tracking-[0.2em] text-accent uppercase">// {aCopy.eyebrow}</p>
-                <h3 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">{aCopy.heading}</h3>
+                <h2 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">{aCopy.heading}</h2>
                 {aCopy.description && <p className="mt-2 text-muted">{aCopy.description}</p>}
               </div>
               <div className="relative w-full md:w-72">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { AnimatePresence, m } from 'framer-motion'
 import { ArrowLeft, ArrowRight, ArrowUpRight, Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react'
@@ -16,12 +16,34 @@ import NotFound from './NotFound'
 import type { ProjectImage } from '@/types/content'
 
 function Lightbox({ images, index, onClose, onNav }: { images: ProjectImage[]; index: number | null; onClose: () => void; onNav: (i: number) => void }) {
+  const dialog = useRef<HTMLDivElement>(null)
+  const closeBtn = useRef<HTMLButtonElement>(null)
+  const opener = useRef<HTMLElement | null>(null)
+  const isOpen = index !== null
+
+  // Focus the close button on open, return focus to the thumbnail on close.
+  useEffect(() => {
+    if (!isOpen) return
+    opener.current = document.activeElement as HTMLElement | null
+    closeBtn.current?.focus()
+    return () => {
+      opener.current?.focus()
+    }
+  }, [isOpen])
+
   useEffect(() => {
     if (index === null) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
       if (e.key === 'ArrowRight') onNav((index + 1) % images.length)
       if (e.key === 'ArrowLeft') onNav((index - 1 + images.length) % images.length)
+      if (e.key === 'Tab' && dialog.current) {
+        // keep focus inside the viewer
+        const items = [...dialog.current.querySelectorAll<HTMLElement>('button')]
+        const i = items.indexOf(document.activeElement as HTMLElement)
+        e.preventDefault()
+        items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length]?.focus()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -30,6 +52,7 @@ function Lightbox({ images, index, onClose, onNav }: { images: ProjectImage[]; i
     <AnimatePresence>
       {index !== null && (
         <m.div
+          ref={dialog}
           role="dialog"
           aria-modal="true"
           aria-label="Image viewer"
@@ -48,7 +71,7 @@ function Lightbox({ images, index, onClose, onNav }: { images: ProjectImage[]; i
             className="max-h-[85vh] max-w-full rounded-lg border border-line object-contain"
             onClick={(e) => e.stopPropagation()}
           />
-          <button className="absolute top-4 right-4 rounded-lg bg-white/10 p-2 text-white" onClick={onClose} aria-label="Close">
+          <button ref={closeBtn} className="absolute top-4 right-4 rounded-lg bg-white/10 p-2 text-white" onClick={onClose} aria-label="Close">
             <X className="h-5 w-5" />
           </button>
           {images.length > 1 && (
@@ -190,7 +213,7 @@ export default function ProjectPage() {
           <span className="text-fg">{project.slug}</span>
         </nav>
 
-        <m.header initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+        <m.header initial={{ y: 16 }} animate={{ y: 0 }} transition={{ duration: 0.6 }}>
           <p className="font-mono text-xs tracking-[0.2em] text-accent uppercase">case study</p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight text-balance text-white md:text-6xl">{project.title}</h1>
           {project.short_description && <p className="mt-5 max-w-3xl text-lg leading-relaxed text-muted">{project.short_description}</p>}
@@ -205,7 +228,7 @@ export default function ProjectPage() {
           </div>
         </m.header>
 
-        <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.7 }} className="group hud mt-10 overflow-hidden rounded-2xl border border-line">
+        <m.div initial={{ y: 24 }} animate={{ y: 0 }} transition={{ delay: 0.15, duration: 0.7 }} className="group hud mt-10 overflow-hidden rounded-2xl border border-line">
           <ProjectThumb project={project} className="aspect-[16/9]" eager />
         </m.div>
 

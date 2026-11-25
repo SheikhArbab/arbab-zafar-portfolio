@@ -4,13 +4,17 @@ import { usePortfolio } from '@/data/PortfolioContext'
 import { navSections } from '@/data/sections'
 import { safeUrl } from '@/lib/utils'
 import { BrandMark } from './Navbar'
+import { SectionLink, scrollToTop } from './SectionLink'
 import { SocialIcon, socialHref } from '@/components/ui/BrandIcons'
 
 export function Footer() {
   const { data } = usePortfolio()
   const { profile, settings } = data
   const year = new Date().getFullYear()
-  const socials = profile.socials.filter((s) => s.visible && safeUrl(socialHref(s.platform, s.url)))
+  // The Email entry may leave its URL empty and rely on the public profile email (same as Contact).
+  const socials = profile.socials
+    .map((s) => ({ ...s, url: s.platform === 'email' ? s.url || profile.email : s.url }))
+    .filter((s) => s.visible && safeUrl(socialHref(s.platform, s.url)))
 
   return (
     <footer className="relative border-t border-line">
@@ -38,9 +42,9 @@ export function Footer() {
           <ul className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
             {navSections(data).map((s) => (
               <li key={s.id}>
-                <a href={`/#${s.id}`} className="text-muted transition-colors hover:text-fg">
+                <SectionLink id={s.id} className="text-muted transition-colors hover:text-fg">
                   {s.label}
-                </a>
+                </SectionLink>
               </li>
             ))}
             {settings.sections.playground && (
@@ -53,14 +57,21 @@ export function Footer() {
           </ul>
         </nav>
         <div className="flex items-start md:justify-end">
-          <a href="#home" className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 font-mono text-xs text-muted hover:border-accent/50 hover:text-accent">
-            <ArrowUp className="h-3.5 w-3.5" /> top
-          </a>
+          <button
+            type="button"
+            onClick={() => {
+              scrollToTop()
+            }}
+            className="inline-flex items-center gap-2 rounded-lg border border-line px-3 py-2 font-mono text-xs text-muted hover:border-accent/50 hover:text-accent"
+          >
+            <ArrowUp className="h-3.5 w-3.5" aria-hidden /> top
+          </button>
         </div>
       </div>
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-5 py-5 font-mono text-[0.7rem] text-dim sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <p>
+          {/* The year can differ between build time and the visitor's clock. */}
+          <p suppressHydrationWarning>
             © {year} {profile.full_name}. {settings.content.footer.text}
           </p>
           <p className="flex items-center gap-4">

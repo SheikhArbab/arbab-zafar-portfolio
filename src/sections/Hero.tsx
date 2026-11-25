@@ -44,10 +44,23 @@ function CvMenu({ label }: { label: string }) {
   const cvs = data.documents.filter((d) => (d.kind === 'cv_en' || d.kind === 'cv_de') && safeUrl(d.file_url))
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const button = useRef<HTMLButtonElement>(null)
   useEffect(() => {
-    const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false)
+    const close = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && ref.current?.contains(document.activeElement)) {
+        setOpen(false)
+        button.current?.focus()
+      }
+    }
     document.addEventListener('click', close)
-    return () => document.removeEventListener('click', close)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('click', close)
+      document.removeEventListener('keydown', onKey)
+    }
   }, [])
   if (!cvs.length) return null
   if (cvs.length === 1)
@@ -58,7 +71,7 @@ function CvMenu({ label }: { label: string }) {
     )
   return (
     <div ref={ref} className="relative">
-      <Button variant="outline" size="lg" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-haspopup="menu">
+      <Button ref={button} variant="outline" size="lg" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-haspopup="menu">
         <Download className="h-4 w-4" /> {label} <ChevronDown className="h-3.5 w-3.5 opacity-60" />
       </Button>
       {open && (
@@ -72,6 +85,7 @@ function CvMenu({ label }: { label: string }) {
                 href={d.file_url}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
                 className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-fg hover:bg-white/5"
               >
                 {d.kind === 'cv_de' ? 'Lebenslauf · Deutsch' : 'Resume · English'}

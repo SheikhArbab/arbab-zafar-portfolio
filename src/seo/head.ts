@@ -17,7 +17,8 @@ export interface HeadData {
 const trimSlash = (u: string) => u.replace(/\/+$/, '')
 
 export function siteUrl(data: PortfolioData) {
-  return trimSlash(data.settings.site_url || 'https://arbab-dev.netlify.app')
+  const build = (import.meta.env.VITE_SITE_URL as string | undefined) || ''
+  return trimSlash(build || data.settings.site_url || 'https://arbab-dev.netlify.app')
 }
 
 function absolute(base: string, url: string | null | undefined) {
@@ -191,7 +192,7 @@ export function playgroundHead(data: PortfolioData): HeadData {
 }
 
 export function notFoundHead(data: PortfolioData): HeadData {
-  return { ...homeHead(data), title: `Page not found · ${data.settings.site_name}`, robots: 'noindex', jsonLd: [] }
+  return { ...homeHead(data), title: `Page not found · ${data.settings.site_name}`, robots: 'noindex', canonical: '', jsonLd: [] }
 }
 
 const esc = (s: string) =>
@@ -206,7 +207,7 @@ export function renderHeadTags(h: HeadData): string {
     `<meta name="description" content="${esc(h.description)}" />`,
     h.keywords.length ? `<meta name="keywords" content="${esc(h.keywords.join(', '))}" />` : '',
     `<meta name="robots" content="${esc(h.robots)}" />`,
-    `<link rel="canonical" href="${esc(h.canonical)}" />`,
+    h.canonical ? `<link rel="canonical" href="${esc(h.canonical)}" />` : '',
     `<meta property="og:type" content="${h.type === 'article' ? 'article' : h.type}" />`,
     `<meta property="og:site_name" content="${esc(h.siteName)}" />`,
     `<meta property="og:title" content="${esc(h.title)}" />`,
@@ -243,7 +244,10 @@ export function applyHead(h: HeadData) {
   }
   const link = (rel: string, href: string | null) => {
     let el = document.head.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`)
-    if (!href) return
+    if (!href) {
+      el?.remove()
+      return
+    }
     if (!el) {
       el = document.createElement('link')
       el.rel = rel

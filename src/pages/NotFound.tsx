@@ -11,7 +11,9 @@ export default function NotFound() {
   return (
     <main id="main" className="bg-grid mask-radial flex min-h-[80vh] items-center justify-center px-5 pt-24">
       <div className="text-center font-mono">
-        <p className="text-7xl font-semibold text-white md:text-9xl">404</p>
+        <h1 className="text-7xl font-semibold text-white md:text-9xl">
+          404<span className="sr-only">: page not found</span>
+        </h1>
         <p className="mt-4 text-accent">$ cd {pathname}</p>
         <p className="mt-1 text-muted">no such file or directory</p>
         <LinkButton to="/" className="mt-10">

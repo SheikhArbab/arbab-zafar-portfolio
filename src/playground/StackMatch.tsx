@@ -115,7 +115,7 @@ export default function StackMatch() {
           <Stat label="moves" value={moves} accent={running} />
           <Stat label="pairs" value={`${matched.size}/${PAIRS}`} />
           <Stat label="time" value={`${seconds}s`} />
-          <Stat label="best" value={best ? `${best} moves` : '—'} />
+          <Stat label="best" value={best !== undefined ? `${best} moves` : '—'} />
         </>
       }
       footer="Flip two cards at a time and match the technologies from my stack in as few moves as possible."

@@ -120,7 +120,7 @@ export function ProjectCard({ project, index, large, horizontal, showLinks = fal
         </div>
         <h3 className={cn('font-semibold tracking-tight text-white', large || horizontal ? 'text-2xl md:text-3xl' : 'text-xl')}>
           {/* Stretched link: whole card opens the case study */}
-          <Link to={`/projects/${project.slug}`} className="after:absolute after:inset-0 after:content-[''] focus:outline-none">
+          <Link to={`/projects/${project.slug}`} className="after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-accent">
             {project.title}
           </Link>
         </h3>

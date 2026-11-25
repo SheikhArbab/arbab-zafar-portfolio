@@ -5,6 +5,7 @@ import { Menu, X } from 'lucide-react'
 import { usePortfolio } from '@/data/PortfolioContext'
 import { navSections } from '@/data/sections'
 import { cn, pad } from '@/lib/utils'
+import { SectionLink } from './SectionLink'
 
 export function BrandMark({ className }: { className?: string }) {
   const { data } = usePortfolio()
@@ -15,15 +16,19 @@ export function BrandMark({ className }: { className?: string }) {
     .slice(0, 2)
     .toLowerCase()
   return (
-    <Link to="/" className={cn('group inline-flex items-center gap-2.5 font-mono', className)} aria-label={`${data.profile.full_name}, home`}>
-      <span className="relative grid h-8 w-8 place-items-center rounded-md border border-accent/40 bg-accent/[0.06] text-[0.8rem] font-semibold text-accent transition-shadow group-hover:glow">
+    <Link
+      to="/"
+      className={cn('group inline-flex items-center gap-2.5 font-mono', className)}
+      aria-label={`${data.profile.short_name.toLowerCase()}.dev, ${data.profile.full_name}, home`}
+    >
+      <span aria-hidden className="relative grid h-8 w-8 place-items-center rounded-md border border-accent/40 bg-accent/[0.06] text-[0.8rem] font-semibold text-accent transition-shadow group-hover:glow">
         {initials}
         <span className="absolute -right-0.5 -bottom-0.5 h-1.5 w-1.5 rounded-full bg-accent" />
       </span>
       <span className="hidden text-sm text-fg sm:inline">
         {data.profile.short_name.toLowerCase()}
         <span className="text-accent">.dev</span>
-        <span className="ml-0.5 inline-block w-1.5 animate-blink text-accent">_</span>
+        <span aria-hidden className="ml-0.5 inline-block w-1.5 animate-blink text-accent">_</span>
       </span>
     </Link>
   )
@@ -66,8 +71,15 @@ export function Navbar() {
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
   }, [open])
-
-  const href = (id: string) => (onHome ? `#${id}` : `/#${id}`)
+  // The mobile menu only exists below md: close it (and release the scroll lock) when the window widens.
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const onChange = () => {
+      if (mq.matches) setOpen(false)
+    }
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
 
   return (
     <header className="fixed inset-x-0 top-0 z-50">
@@ -83,8 +95,8 @@ export function Navbar() {
           <ul className="flex items-center gap-1">
             {sections.slice(1).map((s, i) => (
               <li key={s.id}>
-                <a
-                  href={href(s.id)}
+                <SectionLink
+                  id={s.id}
                   className={cn(
                     'relative rounded-md px-3 py-1.5 text-sm transition-colors',
                     active === s.id && onHome ? 'text-white' : 'text-muted hover:text-fg',
@@ -96,7 +108,7 @@ export function Navbar() {
                   {active === s.id && onHome && (
                     <m.span layoutId="nav-active" className="absolute inset-x-2 -bottom-[3px] h-px bg-accent shadow-[0_0_8px_var(--accent)]" />
                   )}
-                </a>
+                </SectionLink>
               </li>
             ))}
           </ul>
@@ -137,14 +149,14 @@ export function Navbar() {
             <ul>
               {sections.map((s, i) => (
                 <m.li key={s.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}>
-                  <a
-                    href={href(s.id)}
+                  <SectionLink
+                    id={s.id}
                     onClick={() => setOpen(false)}
                     className="flex items-center gap-3 rounded-lg px-3 py-3 text-base text-fg hover:bg-white/5"
                   >
                     <span className="font-mono text-xs text-accent">{pad(i)}</span>
                     {s.label}
-                  </a>
+                  </SectionLink>
                 </m.li>
               ))}
             </ul>

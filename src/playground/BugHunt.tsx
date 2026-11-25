@@ -104,6 +104,10 @@ export default function BugHunt() {
     startedAt.current = Date.now()
     nextSpawn.current = Date.now() + 400
     setStatus('running')
+    // The start button disappears; keep keyboard users on the board.
+    setTimeout(() => {
+      document.querySelector<HTMLButtonElement>('[data-bug-cell="0"]')?.focus()
+    }, 0)
   }
 
   const hit = (i: number) => {
@@ -162,6 +166,7 @@ export default function BugHunt() {
             {cells.map((c, i) => (
               <button
                 key={i}
+                data-bug-cell={i}
                 onPointerDown={(e) => {
                   e.preventDefault()
                   hit(i)

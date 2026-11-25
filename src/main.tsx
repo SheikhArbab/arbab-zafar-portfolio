@@ -5,6 +5,8 @@ import { LazyMotion } from 'framer-motion'
 import App from './App'
 
 const loadFeatures = () => import('./lib/motionFeatures').then((r) => r.default)
+import '@fontsource-variable/geist'
+import '@fontsource-variable/jetbrains-mono'
 import './index.css'
 import type { PortfolioData } from './types/content'
 

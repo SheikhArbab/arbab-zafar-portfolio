@@ -51,14 +51,19 @@ for (const p of data.projects) write(`projects/${p.slug}.html`, page(`/projects/
 const hasPlayground = data.settings.sections.playground !== false
 if (hasPlayground) write('playground.html', page('/playground'))
 
-// SPA shell: no prerendered markup or data; the client fetches content itself.
-write(
-  'spa.html',
+// SPA shells: no prerendered markup or data; the client fetches content itself.
+// spa.html serves the admin and not-yet-prerendered projects; 404.html is returned with HTTP 404.
+const escHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+const shell = (extraHead = '') =>
   template
-    .replace('<!--app-head-->', `<title>${data.settings.site_name}</title>\n    <meta name="description" content="${data.settings.seo_description.replace(/"/g, '&quot;')}" />`)
+    .replace(
+      '<!--app-head-->',
+      `<title>${escHtml(data.settings.site_name)}</title>\n    <meta name="description" content="${escHtml(data.settings.seo_description)}" />${extraHead}`,
+    )
     .replace('<!--app-html-->', '')
-    .replace('<!--app-data-->', ''),
-)
+    .replace('<!--app-data-->', '')
+write('spa.html', shell())
+write('404.html', shell('\n    <meta name="robots" content="noindex" />'))
 
 // Sitemap & robots -----------------------------------------------------------
 const lastmod = (d?: string) => (d ? `\n    <lastmod>${new Date(d).toISOString().slice(0, 10)}</lastmod>` : '')
@@ -95,8 +100,8 @@ const extraScriptSrc = (process.env.CSP_EXTRA_SCRIPT_SRC || '').trim()
 const csp = [
   "default-src 'self'",
   `script-src 'self' https://challenges.cloudflare.com ${NETLIFY_BADGE_HASH} ${extraScriptSrc}`.trim(),
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
   `img-src 'self' data: blob: https: ${supabaseOrigin}`.trim(),
   `media-src 'self' https: ${supabaseOrigin}`.trim(),
   `connect-src 'self' ${supabaseOrigin} ${wsOrigin} https://challenges.cloudflare.com`.replace(/\s+/g, ' '),
@@ -110,4 +115,4 @@ const csp = [
 write('_headers', `/*\n  Content-Security-Policy: ${csp}\n`)
 
 rmSync(join(root, 'dist-ssr'), { recursive: true, force: true })
-console.log(`✓ prerendered ${1 + data.projects.length + (hasPlayground ? 1 : 0)} pages from ${source} · sitemap.xml · robots.txt · spa.html · _headers (CSP${supabaseOrigin ? ' + ' + supabaseOrigin : ''})`)
+console.log(`✓ prerendered ${1 + data.projects.length + (hasPlayground ? 1 : 0)} pages from ${source} · sitemap.xml · robots.txt · spa.html · 404.html · _headers (CSP${supabaseOrigin ? ' + ' + supabaseOrigin : ''})`)

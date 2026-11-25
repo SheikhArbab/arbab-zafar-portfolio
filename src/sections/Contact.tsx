@@ -77,7 +77,9 @@ export function Contact({ index }: { index: number }) {
     const errs = validateContact(clean)
     if (Object.keys(errs).length) {
       setErrors(errs)
-      document.getElementById(`contact-${Object.keys(errs)[0]}`)?.focus()
+      // Focus the first invalid field in form order.
+      const first = (['name', 'email', 'subject', 'message'] as const).find((k) => errs[k])
+      if (first) document.getElementById(`contact-${first}`)?.focus()
       return
     }
     if (turnstile.enabled && !turnstile.token) {
@@ -96,6 +98,9 @@ export function Contact({ index }: { index: number }) {
       const body = (await res.json().catch(() => ({}))) as { error?: string }
       if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`)
       setStatus('success')
+      setTimeout(() => {
+        document.getElementById('contact-success')?.focus()
+      }, 50)
       setValues({ name: '', email: '', subject: '', message: '' })
       turnstile.reset()
     } catch (err) {
@@ -189,16 +194,23 @@ export function Contact({ index }: { index: number }) {
                 {status === 'success' ? (
                   <m.div
                     key="ok"
+                    id="contact-success"
+                    tabIndex={-1}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="flex min-h-[420px] flex-col items-center justify-center p-8 text-center"
+                    className="flex min-h-[420px] flex-col items-center justify-center p-8 text-center outline-none"
                     role="status"
                   >
                     <CheckCircle2 className="h-12 w-12 text-accent" aria-hidden />
                     <p className="mt-5 font-mono text-sm text-accent">200 OK · transmission complete</p>
                     <p className="mt-2 max-w-sm text-muted">{copy.success_message}</p>
-                    <Button variant="outline" className="mt-8" onClick={() => setStatus('idle')}>
+                    <Button variant="outline" className="mt-8" onClick={() => {
+                        setStatus('idle')
+                        setTimeout(() => {
+                          document.getElementById('contact-name')?.focus()
+                        }, 50)
+                      }}>
                       Send another message
                     </Button>
                   </m.div>
@@ -226,7 +238,7 @@ export function Contact({ index }: { index: number }) {
                       <Textarea {...field('message')} rows={6} placeholder="Tell me a little about what you have in mind…" maxLength={5000} />
                       <div className="flex justify-between">
                         <FieldError>{errors.message && <span id="contact-message-err">{errors.message}</span>}</FieldError>
-                        <span className="mt-1.5 ml-auto font-mono text-[0.65rem] text-dim">{values.message.length}/5000</span>
+                        <span className="mt-1.5 ml-auto font-mono text-[0.65rem] text-dim">{[...values.message].length}/5000</span>
                       </div>
                     </div>
 

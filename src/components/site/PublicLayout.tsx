@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { MotionConfig } from 'framer-motion'
+import { useLocation } from 'react-router-dom'
 import { usePortfolio } from '@/data/PortfolioContext'
 import { useMotionLevel } from '@/lib/motion'
 import { Navbar } from './Navbar'
@@ -20,6 +21,11 @@ export function PublicLayout({ children }: { children: ReactNode }) {
   const { data } = usePortfolio()
   useAccentVars()
   const level = useMotionLevel(data.settings.animation_level)
+  const { pathname, hash } = useLocation()
+  // New page without a section hash: start at the top (otherwise the old scroll offset carries over).
+  useEffect(() => {
+    if (!hash) window.scrollTo(0, 0)
+  }, [pathname, hash])
 
   return (
     <MotionConfig reducedMotion={level === 'full' ? 'never' : 'always'}>

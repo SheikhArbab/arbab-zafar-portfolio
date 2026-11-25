@@ -72,21 +72,27 @@ export default function KeystrokeSprint() {
   const wpm = Math.round((correct + currentCorrect) / 5 / elapsedMin)
   const accuracy = correct + currentCorrect + errors === 0 ? 100 : Math.round(((correct + currentCorrect) / (correct + currentCorrect + errors)) * 100)
 
+  // The ticking interval must survive keystrokes, so it reads the live progress from a ref.
+  const progressRef = useRef(0)
+  progressRef.current = currentCorrect
+
   const finish = useCallback(() => {
     setStatus('done')
-    const result = Math.round((doneChars.current + currentCorrect) / 5 / (DURATION / 60))
+    const result = Math.round((doneChars.current + progressRef.current) / 5 / (DURATION / 60))
     setFinalWpm(result)
     setRecord(saveBest('typing', result))
     setBest(readBest().typing)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentCorrect])
+  }, [])
 
   useEffect(() => {
     if (status !== 'running') return
     const id = setInterval(() => {
       const left = Math.max(0, DURATION - (Date.now() - startedAt.current) / 1000)
       setTimeLeft(Math.ceil(left))
-      if (left <= 0) finish()
+      if (left <= 0) {
+        clearInterval(id)
+        finish()
+      }
     }, 100)
     return () => clearInterval(id)
   }, [status, finish])
@@ -139,7 +145,7 @@ export default function KeystrokeSprint() {
           <Stat label="time" value={`${timeLeft}s`} accent={status === 'running'} />
           <Stat label="wpm" value={status === 'idle' ? '—' : wpm} />
           <Stat label="accuracy" value={status === 'idle' ? '—' : `${accuracy}%`} />
-          <Stat label="best" value={best ? `${best} wpm` : '—'} />
+          <Stat label="best" value={best !== undefined ? `${best} wpm` : '—'} />
         </>
       }
       footer="Type the line exactly, including symbols. The timer starts on your first keystroke. Paste is disabled."
@@ -162,7 +168,7 @@ export default function KeystrokeSprint() {
             <span>{status === 'idle' ? 'start typing to begin' : 'go go go'}</span>
           </div>
           <div
-            className="scrollbar-thin overflow-x-auto rounded-xl border border-line bg-black/40 px-4 py-5 font-mono text-base leading-relaxed whitespace-pre sm:text-lg"
+            className="rounded-xl border border-line bg-black/40 px-4 py-5 font-mono text-base leading-relaxed break-all whitespace-pre-wrap sm:text-lg"
             onClick={() => input.current?.focus()}
             aria-hidden
           >
@@ -196,6 +202,7 @@ export default function KeystrokeSprint() {
             value={typed}
             onChange={onChange}
             onPaste={(e) => e.preventDefault()}
+            onDrop={(e) => e.preventDefault()}
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"

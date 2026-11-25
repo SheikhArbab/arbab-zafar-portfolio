@@ -27,13 +27,44 @@
     # Content-Security-Policy is generated per build into dist/_headers (scripts/prerender.ts)
 
 [[headers]]
+  for = "/admin"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-store"
+
+[[headers]]
   for = "/admin/*"
   [headers.values]
     X-Robots-Tag = "noindex, nofollow"
     Cache-Control = "no-store"
 
-# Everything that isn't a real file (admin, new project slugs) → SPA shell
+# Real files (prerendered pages, assets) are always served first. Rules below only apply to
+# paths with no file behind them.
+
+# A missing hashed asset must be a real 404, never HTML (a stale tab then reloads cleanly).
 [[redirects]]
-  from = "/*"
+  from = "/assets/*"
+  to = "/404.html"
+  status = 404
+
+# App routes rendered in the browser: the admin, and projects added after the last build.
+[[redirects]]
+  from = "/admin"
   to = "/spa.html"
   status = 200
+
+[[redirects]]
+  from = "/admin/*"
+  to = "/spa.html"
+  status = 200
+
+[[redirects]]
+  from = "/projects/*"
+  to = "/spa.html"
+  status = 200
+
+# Anything else is a genuine 404 (the React app renders the not-found page).
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404

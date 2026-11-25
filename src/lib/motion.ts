@@ -34,7 +34,7 @@ export function detectThreeMode(): ThreeMode {
     const cores = nav.hardwareConcurrency ?? 4
     const memory = nav.deviceMemory ?? 4
     const small = window.matchMedia('(max-width: 767px)').matches
-    if (small) return cores >= 6 && memory >= 4 ? 'lite' : 'none'
+    if (small) return 'none' // phones: static visual, never download the ~1 MB 3D bundle
     if (cores <= 2 || memory < 2) return 'lite'
     return 'full'
   } catch {
