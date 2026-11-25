@@ -4,11 +4,20 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL } from './env'
  * Minimal read-only PostgREST client for the public site (~1 KB instead of supabase-js).
  * Requests run as the `anon` role, so RLS guarantees only published content is returned.
  */
+/**
+ * Works with both key styles: legacy anon JWTs (also sent as Bearer) and the newer
+ * `sb_publishable_…` keys, which are not JWTs and must only travel in the apikey header.
+ */
+function anonHeaders(): Record<string, string> {
+  const key = SUPABASE_ANON_KEY!
+  return key.startsWith('eyJ') ? { apikey: key, Authorization: `Bearer ${key}` } : { apikey: key }
+}
+
 export async function restSelect<T>(table: string, query: Record<string, string>): Promise<T[]> {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) throw new Error('Supabase not configured')
   const params = new URLSearchParams(query)
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
-    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, Accept: 'application/json' },
+    headers: { ...anonHeaders(), Accept: 'application/json' },
   })
   if (!res.ok) throw new Error(`${table}: ${res.status} ${await res.text().catch(() => '')}`)
   return (await res.json()) as T[]
