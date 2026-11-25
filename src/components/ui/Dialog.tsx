@@ -25,7 +25,11 @@ export function Dialog({ open, onClose, title, description, children, footer, si
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', onKey)
-    const t = setTimeout(() => panel.current?.focus(), 30)
+    // Move focus into the dialog for keyboard/screen-reader users, but never steal it from a
+    // field inside the dialog that the user has already focused.
+    const t = setTimeout(() => {
+      if (!panel.current?.contains(document.activeElement)) panel.current?.focus()
+    }, 30)
     return () => {
       document.body.style.overflow = prev
       window.removeEventListener('keydown', onKey)
