@@ -87,9 +87,14 @@ const supabaseOrigin = (() => {
   }
 })()
 const wsOrigin = supabaseOrigin.replace(/^http/, 'ws')
+// Netlify injects its "Powered by Netlify" badge/owner toolbar into free-plan sites; it renders in a
+// srcdoc iframe with one fixed inline script. Allow exactly that script by hash (no 'unsafe-inline').
+// If Netlify updates the badge, add the new hash via CSP_EXTRA_SCRIPT_SRC (space-separated) in Netlify env.
+const NETLIFY_BADGE_HASH = "'sha256-BkKP2XO6WOEc3kXOiLr2ZoY83hamalKjPY9xBcbXVuw='"
+const extraScriptSrc = (process.env.CSP_EXTRA_SCRIPT_SRC || '').trim()
 const csp = [
   "default-src 'self'",
-  "script-src 'self' https://challenges.cloudflare.com",
+  `script-src 'self' https://challenges.cloudflare.com ${NETLIFY_BADGE_HASH} ${extraScriptSrc}`.trim(),
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   `img-src 'self' data: blob: https: ${supabaseOrigin}`.trim(),
