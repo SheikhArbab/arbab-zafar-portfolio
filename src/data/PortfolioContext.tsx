@@ -3,7 +3,7 @@ import { defaultData } from '@/content/defaults'
 import { fetchPortfolio } from '@/data/fetchPortfolio'
 import { isSupabaseConfigured } from '@/lib/env'
 import type { PortfolioData } from '@/types/content'
-import { useLocale } from '@/i18n'
+import { UiTextContext, useLocale } from '@/i18n'
 import { localizeData } from '@/i18n/localize'
 
 interface PortfolioState {
@@ -47,7 +47,11 @@ export function PortfolioProvider({ initialData, children }: { initialData?: Por
     document.documentElement.lang = locale
   }, [locale])
   const value = useMemo(() => ({ data: localized, ready, error, refresh }), [localized, ready, error])
-  return <PortfolioCtx.Provider value={value}>{children}</PortfolioCtx.Provider>
+  return (
+    <PortfolioCtx.Provider value={value}>
+      <UiTextContext.Provider value={data.settings.ui_text ?? null}>{children}</UiTextContext.Provider>
+    </PortfolioCtx.Provider>
+  )
 }
 
 export function usePortfolio() {

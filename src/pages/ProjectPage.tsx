@@ -251,7 +251,7 @@ export default function ProjectPage() {
 
           <aside className="order-1 md:order-2 md:pt-10">
             <div className="glass rounded-2xl px-5 py-2 md:sticky md:top-28">
-              <p className="pt-3 font-mono text-[0.68rem] tracking-[0.2em] text-accent uppercase">at a glance</p>
+              <p className="pt-3 font-mono text-[0.68rem] tracking-[0.2em] text-accent uppercase">{t.caseStudy.glance}</p>
               <dl>
                 {project.category && <Glance label={t.caseStudy.type}>{project.category}</Glance>}
                 {timeline && <Glance label={t.caseStudy.timeline}>{timeline}</Glance>}

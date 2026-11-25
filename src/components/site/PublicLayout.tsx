@@ -7,6 +7,7 @@ import { useT } from '@/i18n'
 import { Navbar } from './Navbar'
 import { Footer } from './Footer'
 import { WhatsAppChat } from './WhatsAppChat'
+import { CustomCursor } from './CustomCursor'
 import { useGlassSheen } from '@/lib/liquidGlass'
 
 export function useAccentVars() {
@@ -46,6 +47,8 @@ export function PublicLayout({ children }: { children: ReactNode }) {
         {children}
         <Footer />
         <WhatsAppChat />
+        <CustomCursor />
+        <div aria-hidden className="scroll-progress" />
       </div>
     </MotionConfig>
   )

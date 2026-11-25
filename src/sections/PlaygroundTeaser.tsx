@@ -15,7 +15,7 @@ export function PlaygroundTeaser() {
     { key: 'memory', name: 'Stack Match', Icon: Layers },
   ]
   return (
-    <section aria-label="Playground" className="relative py-6">
+    <section aria-label={t.playgroundTeaser.label} className="relative py-6">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <Reveal>
           <div className="spotlight relative overflow-hidden rounded-2xl border border-line bg-gradient-to-r from-accent/[0.04] via-transparent to-accent-2/[0.04] p-5 md:p-6">

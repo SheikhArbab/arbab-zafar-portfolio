@@ -1,5 +1,5 @@
 import type { PortfolioData, Project } from '@/types/content'
-import { dict, localizePath, type Locale } from '@/i18n'
+import { dictFor, localizePath, type Locale } from '@/i18n'
 
 export interface HeadData {
   title: string
@@ -124,7 +124,7 @@ export function projectHead(data: PortfolioData, project: Project, locale: Local
   const description = project.seo_description || project.short_description || home.description
   return {
     ...home,
-    title: project.seo_title || `${project.title}: ${dict(locale).seo.caseStudy} · ${data.profile.full_name}`,
+    title: project.seo_title || `${project.title}: ${dictFor(data, locale).seo.caseStudy} · ${data.profile.full_name}`,
     description,
     canonical: url,
     alternates: alternatesFor(base, `/projects/${project.slug}`),
@@ -168,7 +168,7 @@ export function projectHead(data: PortfolioData, project: Project, locale: Local
 export function playgroundHead(data: PortfolioData, locale: Locale = 'en'): HeadData {
   const base = siteUrl(data)
   const home = homeHead(data, locale)
-  const t = dict(locale)
+  const t = dictFor(data, locale)
   const name = data.profile.full_name
   const games = (['typing', 'bugs', 'memory'] as const).map((k) => [t.playground.games[k].name, t.playground.games[k].blurb])
   return {
@@ -209,7 +209,7 @@ export function playgroundHead(data: PortfolioData, locale: Locale = 'en'): Head
 export function cvHead(data: PortfolioData, locale: Locale = 'en'): HeadData {
   const base = siteUrl(data)
   const home = homeHead(data, locale)
-  const t = dict(locale).cv
+  const t = dictFor(data, locale).cv
   const name = data.profile.full_name
   return {
     ...home,
@@ -234,7 +234,7 @@ export function cvHead(data: PortfolioData, locale: Locale = 'en'): HeadData {
 export function maintenanceHead(data: PortfolioData, locale: Locale = 'en'): HeadData {
   return {
     ...homeHead(data, locale),
-    title: `${dict(locale).maintenance.title} · ${data.settings.site_name}`,
+    title: `${dictFor(data, locale).maintenance.title} · ${data.settings.site_name}`,
     description: data.settings.maintenance_message,
     robots: 'noindex',
     alternates: [],
@@ -243,7 +243,7 @@ export function maintenanceHead(data: PortfolioData, locale: Locale = 'en'): Hea
 }
 
 export function notFoundHead(data: PortfolioData, locale: Locale = 'en'): HeadData {
-  return { ...homeHead(data, locale), title: `${dict(locale).seo.notFound} · ${data.settings.site_name}`, robots: 'noindex', canonical: '', alternates: [], jsonLd: [] }
+  return { ...homeHead(data, locale), title: `${dictFor(data, locale).seo.notFound} · ${data.settings.site_name}`, robots: 'noindex', canonical: '', alternates: [], jsonLd: [] }
 }
 
 const esc = (s: string) =>

@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { dict } from '@/i18n'
 import type { CvModel } from './model'
 import { QrCode } from './QrCode'
 
@@ -23,7 +22,7 @@ function Links({ text, href }: { text: string; href?: string }) {
 }
 
 function Avatar({ m, className }: { m: CvModel; className: string }) {
-  const t = dict(m.locale).cv
+  const t = m.t.cv
   return m.photo ? (
     <img src={m.photo} alt={t.photo(m.name)} className={`${className} object-cover`} />
   ) : (
@@ -49,7 +48,7 @@ function MainHeading({ children }: { children: ReactNode }) {
 }
 
 export function ModernCv({ m }: { m: CvModel }) {
-  const t = dict(m.locale).cv
+  const t = m.t.cv
   return (
     <article lang={m.locale} className={`cv-sheet grid grid-cols-[64mm_1fr] bg-white text-[9pt] leading-[1.45] ${INK}`}>
       <aside className="space-y-[6.5mm] bg-[#eef3f1] px-[8mm] py-[12mm]">
@@ -214,7 +213,7 @@ function Row({ left, children }: { left: ReactNode; children: ReactNode }) {
 }
 
 export function LebenslaufCv({ m, today }: { m: CvModel; today: string }) {
-  const t = dict(m.locale).cv
+  const t = m.t.cv
   const personal = [
     { label: t.name, value: m.name },
     ...m.contact.filter((c) => c.label === t.location || c.label === t.phone || c.label === t.email),
@@ -371,7 +370,7 @@ function EuRow({ label, children }: { label?: ReactNode; children: ReactNode }) 
 }
 
 export function EuropassCv({ m }: { m: CvModel }) {
-  const t = dict(m.locale).cv
+  const t = m.t.cv
   const eu = t.eu
   const contact = m.contact
   const cell = 'border border-[#3a7bbf]/40 px-[1.6mm] py-[1mm] text-center'

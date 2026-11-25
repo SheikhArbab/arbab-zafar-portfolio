@@ -14,6 +14,8 @@ export const de: Dict = {
     loading: 'lädt',
     close: 'Schließen',
     switchLanguage: 'Read in English',
+    navPrimary: 'Hauptnavigation',
+    navMobile: 'Mobiles Menü',
   },
   hero: {
     scroll: 'scrollen',
@@ -123,7 +125,7 @@ export const de: Dict = {
     breadcrumb: 'Brotkrumen-Navigation',
   },
   german: { sectionLabel: 'Deutsch lernen', level: (l, g) => `Niveau ${l} → Ziel ${g}`, levelAria: (l, g) => `Aktuelles Niveau ${l}, Ziel ${g}` },
-  playgroundTeaser: { tagline: '3 Minispiele, gebaut mit React & TypeScript.' },
+  playgroundTeaser: { label: 'Playground', tagline: '3 Minispiele, gebaut mit React & TypeScript.' },
   contact: {
     name: 'Name',
     email: 'E-Mail',

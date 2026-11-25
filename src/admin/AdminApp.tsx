@@ -24,6 +24,7 @@ const DocumentsPage = lazy(() => import('./pages/DocumentsPage'))
 const MessagesPage = lazy(() => import('./pages/MessagesPage'))
 const SeoPage = lazy(() => import('./pages/SeoPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const TextsPage = lazy(() => import('./pages/TextsPage'))
 
 function SetupRequired() {
   return (
@@ -100,6 +101,7 @@ function Protected() {
           <Route path="messages" element={<MessagesPage />} />
           <Route path="seo" element={<SeoPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="texts" element={<TextsPage />} />
           <Route path="*" element={<Navigate to="/admin" replace />} />
         </Routes>
       </Suspense>

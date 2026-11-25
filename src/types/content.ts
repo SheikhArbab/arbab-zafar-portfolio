@@ -141,6 +141,8 @@ export interface SiteSettings {
   maintenance_mode: boolean
   maintenance_message: string
   content: SiteContent
+  /** Admin overrides of interface text, per language: { en: { "hero.scroll": "…" }, de: { … } }. */
+  ui_text?: Partial<Record<'en' | 'de', Record<string, string>>>
   updated_at?: string
 }
 

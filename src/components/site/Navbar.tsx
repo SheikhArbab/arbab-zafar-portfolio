@@ -102,7 +102,7 @@ export function Navbar() {
         )}
       >
         <BrandMark />
-        <nav aria-label="Primary" className="hidden md:block">
+        <nav aria-label={t.common.navPrimary} className="hidden md:block">
           <ul className="flex items-center gap-1">
             {sections.slice(1).map((s, i) => (
               <li key={s.id}>
@@ -151,7 +151,7 @@ export function Navbar() {
         {open && (
           <m.nav
             id="mobile-nav"
-            aria-label="Mobile"
+            aria-label={t.common.navMobile}
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}

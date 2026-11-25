@@ -12,6 +12,8 @@ export const en = {
     loading: 'loading',
     close: 'Close',
     switchLanguage: 'Auf Deutsch lesen',
+    navPrimary: 'Primary',
+    navMobile: 'Mobile menu',
   },
   hero: {
     scroll: 'scroll',
@@ -123,7 +125,7 @@ export const en = {
     breadcrumb: 'Breadcrumb',
   },
   german: { sectionLabel: 'German language learning', level: (l: string, g: string) => `Niveau ${l} → Ziel ${g}`, levelAria: (l: string, g: string) => `Current level ${l}, goal ${g}` },
-  playgroundTeaser: { tagline: '3 mini games built with React & TypeScript.' },
+  playgroundTeaser: { label: 'Playground', tagline: '3 mini games built with React & TypeScript.' },
   contact: {
     name: 'Name',
     email: 'Email',

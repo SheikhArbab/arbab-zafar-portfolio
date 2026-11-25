@@ -1,5 +1,5 @@
 import type { PortfolioData } from '@/types/content'
-import { dict, intlLocale, localizePath, type Locale } from '@/i18n'
+import { dictFor, intlLocale, localizePath, type Dict, type Locale } from '@/i18n'
 import { siteUrl } from '@/seo/head'
 import { dateRange, safeUrl } from '@/lib/utils'
 import { socialHref } from '@/components/ui/BrandIcons'
@@ -12,6 +12,8 @@ export interface CvItem {
 
 export interface CvModel {
   locale: Locale
+  /** Interface text incl. admin overrides. */
+  t: Dict
   name: string
   title: string
   summary: string
@@ -45,7 +47,7 @@ const pretty = (url: string) => url.replace(/^mailto:/, '').replace(/^https?:\/\
 
 /** Everything the CV templates render, from the (already localized) portfolio data. Invents nothing. */
 export function buildCv(data: PortfolioData, locale: Locale): CvModel {
-  const t = dict(locale)
+  const t = dictFor(data, locale)
   const { profile } = data
   const cv = profile.cv
   const base = siteUrl(data)
@@ -122,6 +124,7 @@ export function buildCv(data: PortfolioData, locale: Locale): CvModel {
 
   return {
     locale,
+    t,
     name: profile.full_name,
     title: profile.title,
     summary: cv.summary || profile.about_lead || profile.hero_description,

@@ -286,3 +286,134 @@
     zoom: 1 !important;
   }
 }
+
+/* ───────────────────────── Scrollbars (WebKit + Firefox) ───────────────────────── */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--accent) 45%, #1b2422) transparent;
+  -webkit-tap-highlight-color: transparent;
+  accent-color: var(--accent);
+  caret-color: var(--accent);
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  border: 3px solid var(--bg);
+  border-radius: 999px;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 70%, #0b0f10), color-mix(in oklab, var(--accent-2) 60%, #0b0f10));
+}
+::-webkit-scrollbar-thumb:hover {
+  border-width: 2px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 12px var(--accent);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+/* Inner scroll areas (terminal, menus): thinner, on a transparent track */
+.glass ::-webkit-scrollbar,
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.glass ::-webkit-scrollbar-track,
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.glass ::-webkit-scrollbar-thumb,
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  border: 0;
+  background: rgb(255 255 255 / 0.16);
+}
+
+/* ───────────────────────── Scroll progress (CSS scroll-driven animation) ───────────────────────── */
+.scroll-progress {
+  display: none;
+}
+@supports (animation-timeline: scroll()) {
+  .scroll-progress {
+    display: block;
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 70;
+    height: 2px;
+    pointer-events: none;
+    transform-origin: 0 50%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    box-shadow: 0 0 10px var(--accent);
+    animation: scroll-progress linear both;
+    animation-timeline: scroll(root block);
+  }
+  @keyframes scroll-progress {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+}
+
+/* ───────────────────────── Custom cursor (desktop mouse only, set by CustomCursor.tsx) ───────────────────────── */
+html.custom-cursor,
+html.custom-cursor * {
+  cursor: none !important;
+}
+html.custom-cursor :is(input, textarea, select, [contenteditable='true']) {
+  cursor: text !important;
+}
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 90;
+  pointer-events: none;
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity 0.25s, width 0.25s, height 0.25s, margin 0.25s, background-color 0.25s, border-color 0.25s;
+}
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+.cursor-ring {
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 1.5px solid color-mix(in oklab, var(--accent) 55%, transparent);
+  backdrop-filter: saturate(160%);
+}
+html.custom-cursor .cursor-dot,
+html.custom-cursor .cursor-ring {
+  opacity: 1;
+}
+.cursor-ring[data-state='link'] {
+  width: 54px;
+  height: 54px;
+  margin: -27px 0 0 -27px;
+  border-color: color-mix(in oklab, var(--accent) 80%, transparent);
+  background: color-mix(in oklab, var(--accent) 10%, transparent);
+}
+.cursor-ring[data-state='down'] {
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+}
+.cursor-ring[data-state='text'],
+.cursor-dot[data-state='text'],
+.cursor-ring[data-state='hidden'],
+.cursor-dot[data-state='hidden'] {
+  opacity: 0 !important;
+}
+@media print {
+  .scroll-progress,
+  .cursor-dot,
+  .cursor-ring {
+    display: none !important;
+  }
+}
