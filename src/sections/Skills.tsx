@@ -1,3 +1,4 @@
+import { lazy, useMemo } from 'react'
 import { m } from 'framer-motion'
 import { usePortfolio } from '@/data/PortfolioContext'
 import { cn, pad } from '@/lib/utils'
@@ -5,6 +6,31 @@ import { SectionHeading } from '@/components/site/SectionHeading'
 import { Reveal } from '@/components/site/Reveal'
 import { SpotlightCard } from '@/components/site/SpotlightCard'
 import { ProficiencyMeter, SkillIcon } from '@/components/site/SkillIcon'
+import { ThreeSlot } from '@/components/three/ThreeSlot'
+import { categoryColors } from '@/lib/palette'
+
+const SkillsOrbit = lazy(() => import('@/components/three/SkillsOrbit'))
+
+/** Static stand-in for the 3D map (loading, reduced motion, no WebGL). */
+function OrbitFallback({ names, colors }: { names: string[]; colors: string[] }) {
+  return (
+    <svg viewBox="0 0 400 300" className="h-full w-full" aria-hidden>
+      <circle cx="200" cy="150" r="110" fill="none" stroke="var(--line-strong)" strokeDasharray="2 6" />
+      <circle cx="200" cy="150" r="14" fill="none" stroke="var(--accent)" strokeOpacity="0.7" />
+      {names.map((n, i) => {
+        const a = (i / names.length) * Math.PI * 2 - Math.PI / 2
+        const x = 200 + Math.cos(a) * 110
+        const y = 150 + Math.sin(a) * 110
+        return (
+          <g key={n}>
+            <line x1="200" y1="150" x2={x} y2={y} stroke={colors[i]} strokeOpacity="0.25" />
+            <circle cx={x} cy={y} r="5" fill={colors[i]} />
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
 
 export function Skills({ index }: { index: number }) {
   const { data } = usePortfolio()
@@ -16,6 +42,12 @@ export function Skills({ index }: { index: number }) {
     .filter((g) => g.items.length)
   const uncategorized = skills.filter((s) => !s.category_id)
   if (uncategorized.length) groups.push({ cat: { id: 'other', name: 'Other', slug: 'other', description: '', sort_order: 999, is_visible: true }, items: uncategorized })
+  const colors = categoryColors(groups.length, data.settings.accent_primary, data.settings.accent_secondary)
+  const orbitNodes = useMemo(
+    () => groups.flatMap((g, cat) => g.items.map((s) => ({ id: s.id, name: s.name, cat, featured: s.is_featured }))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [skills, categories],
+  )
 
   return (
     <section id="skills" aria-labelledby="skills-title" className="relative py-24 md:py-32">
@@ -46,6 +78,33 @@ export function Skills({ index }: { index: number }) {
                   </m.li>
                 ))}
               </ul>
+            </div>
+          </Reveal>
+        )}
+
+        {orbitNodes.length > 2 && (
+          <Reveal className="mb-6 hidden md:block">
+            <div className="relative overflow-hidden rounded-2xl border border-line bg-black/20">
+              <div className="pointer-events-none absolute top-4 left-5 z-10">
+                <p className="font-mono text-[0.68rem] tracking-[0.18em] text-dim uppercase">
+                  <span className="text-accent-2">◆</span> interactive stack map
+                </p>
+                <p className="mt-1 font-mono text-[0.65rem] text-dim">drag to rotate · hover a node</p>
+              </div>
+              <ul className="pointer-events-none absolute top-4 right-5 z-10 flex max-w-[55%] flex-wrap justify-end gap-x-4 gap-y-1.5">
+                {groups.map(({ cat }, i) => (
+                  <li key={cat.id} className="flex items-center gap-1.5 font-mono text-[0.65rem] text-muted">
+                    <span className="h-2 w-2 rounded-full" style={{ background: colors[i] }} />
+                    {cat.name}
+                  </li>
+                ))}
+              </ul>
+              <ThreeSlot
+                className="h-[460px]"
+                scene={SkillsOrbit}
+                props={{ nodes: orbitNodes, colors, accent: data.settings.accent_primary }}
+                fallback={<OrbitFallback names={groups.map((g) => g.cat.name)} colors={colors} />}
+              />
             </div>
           </Reveal>
         )}

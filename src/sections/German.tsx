@@ -1,4 +1,21 @@
+import { lazy } from 'react'
 import { usePortfolio } from '@/data/PortfolioContext'
+import { ThreeSlot } from '@/components/three/ThreeSlot'
+
+const GlobeScene = lazy(() => import('@/components/three/GlobeScene'))
+
+function GlobeFallback() {
+  return (
+    <svg viewBox="0 0 200 200" className="h-full w-full" aria-hidden>
+      <circle cx="100" cy="100" r="72" fill="none" stroke="var(--accent-2)" strokeOpacity="0.3" />
+      <ellipse cx="100" cy="100" rx="72" ry="26" fill="none" stroke="var(--accent-2)" strokeOpacity="0.18" />
+      <ellipse cx="100" cy="100" rx="30" ry="72" fill="none" stroke="var(--accent-2)" strokeOpacity="0.18" />
+      <path d="M128 118 Q 104 52 76 82" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
+      <circle cx="128" cy="118" r="3.5" fill="var(--accent)" />
+      <circle cx="76" cy="82" r="3.5" fill="var(--accent-2)" />
+    </svg>
+  )
+}
 import { cn } from '@/lib/utils'
 import { Reveal } from '@/components/site/Reveal'
 
@@ -21,7 +38,7 @@ export function German() {
               <span className="flex-1 bg-[#dd0000]" />
               <span className="flex-1 bg-[#ffce00]" />
             </div>
-            <div className="flex flex-col gap-6 pl-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-6 pl-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
                 <p className="font-mono text-xs text-accent">{g.badge}</p>
                 <h2 className="mt-1.5 text-lg font-semibold text-white">{g.headline}</h2>
@@ -37,7 +54,21 @@ export function German() {
                   </ul>
                 )}
               </div>
-              <div className="shrink-0">
+              <div className="flex shrink-0 items-center gap-6">
+                <div className="hidden h-[210px] w-[250px] md:block" lang="en">
+                  <ThreeSlot
+                    className="h-full w-full"
+                    scene={GlobeScene}
+                    props={{
+                      from: { lat: 33.6844, lon: 73.0479, label: 'Islamabad, PK' },
+                      to: { lat: 51.1657, lon: 10.4515, label: 'Deutschland' },
+                      accent: data.settings.accent_primary,
+                      accent2: data.settings.accent_secondary,
+                    }}
+                    fallback={<GlobeFallback />}
+                  />
+                </div>
+                <div>
                 <p className="mb-2 font-mono text-[0.62rem] tracking-widest text-dim uppercase">
                   Niveau {g.level} → Ziel {g.goal}
                 </p>
@@ -56,6 +87,7 @@ export function German() {
                     </li>
                   ))}
                 </ol>
+                </div>
               </div>
             </div>
           </div>

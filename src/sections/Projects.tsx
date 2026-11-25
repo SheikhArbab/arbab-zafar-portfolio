@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { SectionHeading } from '@/components/site/SectionHeading'
 import { Reveal } from '@/components/site/Reveal'
 import { ProjectCard } from '@/components/site/ProjectCard'
+import { Tilt } from '@/components/site/Tilt'
 
 /** Bento spans that always fill complete rows, whatever the number of featured projects. */
 function bento(n: number, i: number): { className: string; large?: boolean; horizontal?: boolean } {
@@ -60,7 +61,9 @@ export function Projects({ index }: { index: number }) {
               const layout = bento(featured.length, i)
               return (
                 <Reveal key={p.id} delay={(i % 3) * 0.06} className={cn('h-full', layout.className)}>
-                  <ProjectCard project={p} index={i} large={layout.large} horizontal={layout.horizontal} showLinks={showLinks} />
+                  <Tilt max={layout.large || layout.horizontal ? 3.5 : 6}>
+                    <ProjectCard project={p} index={i} large={layout.large} horizontal={layout.horizontal} showLinks={showLinks} />
+                  </Tilt>
                 </Reveal>
               )
             })}
@@ -133,7 +136,9 @@ export function Projects({ index }: { index: number }) {
                       exit={{ opacity: 0, scale: 0.96 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <ProjectCard project={p} index={projects.indexOf(p)} showLinks={showLinks} />
+                      <Tilt>
+                        <ProjectCard project={p} index={projects.indexOf(p)} showLinks={showLinks} />
+                      </Tilt>
                     </m.li>
                   ))}
                 </AnimatePresence>
