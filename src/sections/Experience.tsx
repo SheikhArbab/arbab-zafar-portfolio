@@ -32,7 +32,7 @@ export function Experience({ index }: { index: number }) {
             className="absolute top-2 bottom-2 left-[7px] w-px origin-top bg-gradient-to-b from-accent via-accent-2 to-accent/0 shadow-[0_0_12px_var(--accent)] md:left-[calc(11rem+7px)]"
           />
           {items.map((job, i) => {
-            const range = dateRange(job.start_date, job.end_date, job.is_current, intlLocale(locale), t.common.present)
+            const range = dateRange(job.start_date, job.end_date, job.is_current, intlLocale(locale), t.common.present, t.common.until)
             return (
               <Reveal as="li" key={job.id} className="relative grid grid-cols-1 gap-3 pb-12 pl-9 last:pb-0 md:grid-cols-[11rem_1fr] md:gap-10 md:pl-0">
                 <div className="font-mono text-xs md:pt-5 md:text-right md:pr-10">

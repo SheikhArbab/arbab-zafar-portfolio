@@ -137,6 +137,10 @@ export const deEducation: Record<string, T> = {
     date_label: 'Abgeschlossen',
     description: 'Secondary School Certificate (Matric), Pakistan.',
   },
+  mern: { title: 'MERN-Stack-Entwicklung' },
+  frontend: { title: 'Frontend-Webentwicklung' },
+  graphic: { title: 'Grafikdesign' },
+  computer: { title: 'Computer-Grundkurs' },
 }
 
 /** Keyed by category slug. */

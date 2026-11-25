@@ -10,6 +10,7 @@ import type {
   SkillCategory,
 } from '../types/content.ts'
 import { deCategories, deEducation, deExperiences, deProfile, deProjects, deSettings } from './de.ts'
+import { moreProjects } from './moreProjects.ts'
 
 /**
  * Default content.
@@ -288,6 +289,7 @@ const exp = (
   description: string,
   technologies: string[],
   is_current = false,
+  end_date: string | null = null,
 ): Experience => ({
   id: `00000000-0000-4000-8000-${String(2000 + i).padStart(12, '0')}`,
   title,
@@ -295,7 +297,7 @@ const exp = (
   employment_type: i === 3 ? 'Internship' : 'Full-time',
   location: 'Islamabad, Pakistan',
   start_date: null,
-  end_date: null,
+  end_date,
   is_current,
   description,
   responsibilities: [],
@@ -313,7 +315,8 @@ export const defaultExperiences: Experience[] = [
     'React Native & Next.js Developer',
     'Building cross-platform mobile applications with React Native and production web applications with Next.js.',
     ['React Native', 'Next.js', 'TypeScript', 'Redux Toolkit', 'RTK Query'],
-    true,
+    false,
+    '2026-12-25', // last day at CyberSoft Vantage
   ),
   exp(
     1,
@@ -362,6 +365,27 @@ const proj = (i: number, p: Partial<Project> & Pick<Project, 'title' | 'slug'>):
   project_images: [],
   ...p,
 })
+
+// Display order (first 5 featured ones fill the homepage grid).
+const PROJECT_ORDER = [
+  'techflow-llc',
+  'vehicle-importer-back-office-system',
+  'sukna-capital-fintech-app',
+  'sims-dashboard',
+  'saj-holding',
+  'numan-hussain-portfolio',
+  'concord-medical-website',
+  'the-international-school-website',
+  'simple-meditation-app',
+  'fitness-app-react-native',
+  'mern-blog-platform',
+  '3d-portfolio',
+  'hoo-bank',
+  'nike-store-clone',
+  'mern-estate',
+  'hr-management-system',
+  'expense-management-portal',
+]
 
 // Case studies are written only from verifiable sources: the live sites, the public
 // repositories (github.com/SheikhArbab) and the previous portfolio. Display order = array order.
@@ -528,10 +552,14 @@ export const defaultProjects: Project[] = [
     // Unfinished (only sign-up is implemented), so it starts unpublished.
     is_published: false,
   }),
-].map((p, i) => ({ ...p, sort_order: i, translations: deProjects[p.slug] ? { de: deProjects[p.slug] } : {} }))
+  ...moreProjects.map(({ de, ...p }, i) => ({ ...proj(10 + i, p), translations: { de } })),
+]
+  .map((p) => ({ ...p, translations: p.translations && Object.keys(p.translations).length ? p.translations : deProjects[p.slug] ? { de: deProjects[p.slug] } : {} }))
+  .sort((a, b) => PROJECT_ORDER.indexOf(a.slug) - PROJECT_ORDER.indexOf(b.slug))
+  .map((p, i) => ({ ...p, sort_order: i }))
 
 // Institution, board and years are not known yet: they are added in /admin → Education, never guessed.
-const edu = (i: number, key: string, e: Pick<Education, 'title' | 'date_label' | 'description'>): Education => ({
+const edu = (i: number, key: string, e: Pick<Education, 'title' | 'date_label' | 'description'> & Partial<Education>): Education => ({
   id: `00000000-0000-4000-8000-${String(4000 + i).padStart(12, '0')}`,
   kind: 'education',
   institution: '',
@@ -554,6 +582,15 @@ export const defaultEducation: Education[] = [
     date_label: 'Completed',
     description: 'Secondary School Certificate (Matric), Pakistan.',
   }),
+  // Courses at Super Tech Institute (STICS). Dates are added in /admin when known.
+  ...(
+    [
+      ['mern', 'MERN Stack Development'],
+      ['frontend', 'Frontend Web Development'],
+      ['graphic', 'Graphic Design'],
+      ['computer', 'Basic Computer Course'],
+    ] as const
+  ).map(([key, title], j) => edu(2 + j, key, { kind: 'course', title, institution: 'Super Tech Institute (STICS)', date_label: '', description: '' })),
 ]
 
 export const defaultData: PortfolioData = {

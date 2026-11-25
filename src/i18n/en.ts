@@ -9,6 +9,7 @@ export const en = {
     closeMenu: 'Close menu',
     home: 'home',
     present: 'Present',
+    until: 'until',
     loading: 'loading',
     close: 'Close',
     switchLanguage: 'Auf Deutsch lesen',

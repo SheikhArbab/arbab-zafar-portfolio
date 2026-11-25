@@ -79,7 +79,7 @@ export function buildCv(data: PortfolioData, locale: Locale): CvModel {
     title: e.title,
     company: e.company,
     meta: [t.experience.employment[e.employment_type] ?? e.employment_type, e.location].filter(Boolean).join(' · '),
-    period: dateRange(e.start_date, e.end_date, e.is_current, intl, t.common.present),
+    period: dateRange(e.start_date, e.end_date, e.is_current, intl, t.common.present, t.common.until),
     description: e.description,
     bullets: [...e.responsibilities, ...e.achievements].filter((b) => b.trim()),
     tech: e.technologies,

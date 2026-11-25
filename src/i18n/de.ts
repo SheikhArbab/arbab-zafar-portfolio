@@ -11,6 +11,7 @@ export const de: Dict = {
     closeMenu: 'Menü schließen',
     home: 'Startseite',
     present: 'heute',
+    until: 'bis',
     loading: 'lädt',
     close: 'Schließen',
     switchLanguage: 'Read in English',

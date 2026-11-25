@@ -50,11 +50,11 @@ export function formatMonth(date: string | null | undefined, locale = 'en-GB') {
 }
 
 /** "Jan 2024 — Present" / "Jan. 2024 — heute". `present` is the localized word. */
-export function dateRange(start: string | null, end: string | null, current: boolean, locale = 'en-GB', present = 'Present') {
+export function dateRange(start: string | null, end: string | null, current: boolean, locale = 'en-GB', present = 'Present', until = 'until') {
   const s = formatMonth(start, locale)
   const e = current ? present : formatMonth(end, locale)
   if (!s && !e) return current ? present : ''
-  if (!s) return e
+  if (!s) return current ? e : `${until} ${e}`
   return `${s} — ${e || present}`
 }
 
