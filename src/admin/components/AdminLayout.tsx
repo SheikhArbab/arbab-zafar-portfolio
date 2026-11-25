@@ -106,7 +106,7 @@ export function AdminLayout({ children, unread }: { children: ReactNode; unread:
   )
 
   return (
-    <div className="min-h-screen bg-[#070a0b]">
+    <div className="min-h-screen bg-[#070a0b] [overflow-wrap:anywhere]">
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-line bg-[#090c0d] lg:block">{sidebar}</aside>
       {/* mobile */}
       <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-line bg-[#090c0d]/90 px-4 backdrop-blur lg:hidden">
@@ -128,8 +128,8 @@ export function AdminLayout({ children, unread }: { children: ReactNode; unread:
           </aside>
         </div>
       )}
-      <main className="lg:pl-64">
-        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:py-10">{children}</div>
+      <main className="min-w-0 lg:pl-64">
+        <div className="mx-auto max-w-5xl min-w-0 px-4 py-8 sm:px-6 lg:py-10">{children}</div>
       </main>
     </div>
   )

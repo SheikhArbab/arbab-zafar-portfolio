@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, m } from 'framer-motion'
 import { X } from 'lucide-react'
@@ -19,14 +19,45 @@ const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl
 
 export function Dialog({ open, onClose, title, description, children, footer, size = 'md', side }: DialogProps) {
   const panel = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+  const descId = useId()
+  // Parents pass a new onClose on every render; keep it in a ref so the effect below runs only
+  // when the dialog opens/closes (re-running it per keystroke used to steal focus while typing).
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    const opener = document.activeElement as HTMLElement | null
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCloseRef.current()
+        return
+      }
+      if (e.key !== 'Tab' || !panel.current) return
+      // Focus trap: cycle through the dialog's focusable elements.
+      const items = [...panel.current.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')].filter(
+        (el) => el.offsetParent !== null,
+      )
+      if (!items.length) return
+      const first = items[0]
+      const last = items[items.length - 1]
+      const active = document.activeElement
+      if (e.shiftKey && (active === first || active === panel.current)) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault()
+        first.focus()
+      } else if (!panel.current.contains(active)) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', onKey)
-    // Move focus into the dialog for keyboard/screen-reader users, but never steal it from a
-    // field inside the dialog that the user has already focused.
+    // Move focus into the dialog, but never steal it from a field the user already focused.
     const t = setTimeout(() => {
       if (!panel.current?.contains(document.activeElement)) panel.current?.focus()
     }, 30)
@@ -34,8 +65,9 @@ export function Dialog({ open, onClose, title, description, children, footer, si
       document.body.style.overflow = prev
       window.removeEventListener('keydown', onKey)
       clearTimeout(t)
+      opener?.focus?.()
     }
-  }, [open, onClose])
+  }, [open])
 
   if (typeof document === 'undefined') return null
   return createPortal(
@@ -47,6 +79,8 @@ export function Dialog({ open, onClose, title, description, children, footer, si
             ref={panel}
             role="dialog"
             aria-modal="true"
+            aria-labelledby={title ? titleId : undefined}
+            aria-describedby={description ? descId : undefined}
             tabIndex={-1}
             initial={side ? { x: '100%' } : { opacity: 0, y: 24, scale: 0.98 }}
             animate={side ? { x: 0 } : { opacity: 1, y: 0, scale: 1 }}
@@ -60,8 +94,16 @@ export function Dialog({ open, onClose, title, description, children, footer, si
             {(title || description) && (
               <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
                 <div className="min-w-0">
-                  {title && <h2 className="text-base font-semibold text-fg">{title}</h2>}
-                  {description && <p className="mt-1 text-sm text-muted">{description}</p>}
+                  {title && (
+                    <h2 id={titleId} className="text-base font-semibold text-fg">
+                      {title}
+                    </h2>
+                  )}
+                  {description && (
+                    <p id={descId} className="mt-1 text-sm text-muted">
+                      {description}
+                    </p>
+                  )}
                 </div>
                 <button onClick={onClose} className="rounded-md p-1.5 text-muted hover:bg-white/5 hover:text-fg" aria-label="Close">
                   <X className="h-4 w-4" />

@@ -10,6 +10,7 @@ import { Spinner } from '@/components/ui/Spinner'
 import { EmptyState, PageHeader } from '../components/PageHeader'
 import { SingletonEditor } from '../components/SingletonEditor'
 import { useConfirm } from '../components/Confirm'
+import { notifyMessagesChanged } from '../lib/events'
 
 type Filter = 'inbox' | 'unread' | 'archived' | 'all'
 
@@ -99,6 +100,7 @@ export default function MessagesPage() {
     setMessages((ms) => ms!.map((x) => (x.id === m.id ? { ...x, status } : x)))
     const { error } = await requireSupabase().from('contact_messages').update({ status }).eq('id', m.id)
     if (error) toast.error(error.message)
+    else notifyMessagesChanged()
   }
 
   const open = (m: ContactMessage) => {
@@ -112,6 +114,7 @@ export default function MessagesPage() {
     if (error) return toast.error(error.message)
     setMessages((ms) => ms!.filter((x) => x.id !== m.id))
     setSelected(null)
+    notifyMessagesChanged()
     toast.success('Message deleted')
   }
 

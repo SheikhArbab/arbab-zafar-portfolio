@@ -14,6 +14,7 @@ import { EmptyState } from './PageHeader'
 import { confirmDiscard, useTrackDirty } from '../lib/dirty'
 import { deepEqual } from '../lib/paths'
 import { removeFile } from '../lib/storage'
+import { cleanupReplacedFiles, clearDraft, friendlyDbError, loadDraft, plural, saveDraft } from '../lib/formHelpers'
 
 type Row = { id: string; sort_order: number } & Record<string, unknown>
 type OwnedFile = { bucket: 'media' | 'documents'; url: string | null | undefined }
@@ -69,6 +70,28 @@ export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
   const dirty = Boolean(editing && !deepEqual(editing.draft, editing.baseline))
   useTrackDirty(`collection:${table}`, dirty)
 
+  // Unsaved edits survive the browser Back button / reload (sessionStorage, this tab only).
+  const draftKey = `collection:${table}`
+  const [pendingDraft, setPendingDraft] = useState<{ id: string | null; draft: T } | null>(null)
+  useEffect(() => {
+    if (editing && dirty) saveDraft(draftKey, { id: editing.original?.id ?? null, draft: editing.draft })
+  }, [editing, dirty, draftKey])
+  useEffect(() => {
+    if (!loading) setPendingDraft(loadDraft<{ id: string | null; draft: T }>(draftKey))
+  }, [loading, draftKey])
+  const restoreDraft = () => {
+    if (!pendingDraft) return
+    const row = pendingDraft.id ? rows.find((r) => r.id === pendingDraft.id) : null
+    const baseline = row ? structuredClone(row) : ({ ...cfg.blank(), id: '', sort_order: rows.length } as T)
+    setErrors({})
+    setEditing({ original: row ?? null, baseline, draft: pendingDraft.draft })
+    setPendingDraft(null)
+  }
+  const discardDraft = () => {
+    clearDraft(draftKey)
+    setPendingDraft(null)
+  }
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
     return rows.filter((r) => {
@@ -92,6 +115,7 @@ export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
   }
   const close = () => {
     if (dirty && !confirmDiscard()) return
+    clearDraft(draftKey)
     setEditing(null)
   }
 
@@ -115,8 +139,11 @@ export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
     const q = isNew ? sb.from(table).insert(payload) : sb.from(table).update(payload).eq('id', editing.draft.id)
     const { data, error } = await q.select(cfg.select ?? '*').single()
     setSaving(false)
-    if (error) return toast.error(error.code === '23505' ? 'That value must be unique (e.g. slug already used).' : error.message)
+    if (error) return toast.error(friendlyDbError(error, fields))
     const saved = data as unknown as T
+    clearDraft(draftKey)
+    // Only now that the save succeeded: delete files that were replaced or removed.
+    if (!isNew) void cleanupReplacedFiles(fields, editing.baseline, saved)
     setRows((rs) => (isNew ? [...rs, saved] : rs.map((r) => (r.id === saved.id ? saved : r))))
     toast.success(`${singular} ${isNew ? 'created' : 'saved'}`)
     // Keep the editor open on create so gallery/children can be added immediately.
@@ -162,7 +189,7 @@ export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-dim" />
-          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={`Search ${singular.toLowerCase()}s…`} className="pl-9" aria-label="Search" />
+          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={`Search ${plural(singular)}…`} className="pl-9" aria-label="Search" />
         </div>
         {cfg.filter && (
           <Select value={filter} onChange={(e) => setFilter(e.target.value)} className="sm:w-56" aria-label={cfg.filter.label}>
@@ -178,6 +205,21 @@ export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
           <Plus className="h-4 w-4" /> New {singular.toLowerCase()}
         </Button>
       </div>
+      {pendingDraft && (
+        <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300/30 bg-amber-300/[0.06] px-4 py-3 text-sm">
+          <span className="text-amber-200">
+            You have unsaved changes to “{cfg.title(pendingDraft.draft) || `a new ${singular.toLowerCase()}`}” from earlier.
+          </span>
+          <span className="flex gap-2">
+            <Button size="sm" onClick={restoreDraft}>
+              Restore
+            </Button>
+            <Button size="sm" variant="ghost" onClick={discardDraft}>
+              Discard
+            </Button>
+          </span>
+        </div>
+      )}
       {!canReorder && rows.length > 1 && <p className="mb-3 text-xs text-dim">Clear search and filters to drag-and-drop reorder.</p>}
 
       {loading ? (
@@ -186,7 +228,7 @@ export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
         </div>
       ) : visible.length === 0 ? (
         <EmptyState
-          title={rows.length ? 'No matches' : `No ${singular.toLowerCase()}s yet`}
+          title={rows.length ? 'No matches' : `No ${plural(singular)} yet`}
           description={rows.length ? 'Try a different search or filter.' : `Create your first ${singular.toLowerCase()} to show it on the portfolio.`}
           action={!rows.length && <Button onClick={openNew}>Create {singular.toLowerCase()}</Button>}
         />
@@ -258,7 +300,16 @@ export function CollectionManager<T extends Row>(cfg: CollectionConfig<T>) {
       >
         {editing && (
           <div className="space-y-8">
-            <FormRenderer fields={fields} values={editing.draft} onChange={(draft) => setEditing((e) => (e ? { ...e, draft } : e))} errors={errors} />
+            <FormRenderer
+              fields={fields}
+              values={editing.draft}
+              onChange={(draft) => {
+                setEditing((e) => (e ? { ...e, draft } : e))
+                // Once errors are showing, re-validate live so fixed fields clear immediately.
+                if (Object.keys(errors).length) setErrors(validate(fields, draft))
+              }}
+              errors={errors}
+            />
             {cfg.editorExtra?.(editing.original)}
           </div>
         )}

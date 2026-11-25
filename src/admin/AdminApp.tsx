@@ -10,6 +10,7 @@ import { DirtyProvider } from './lib/dirty'
 import { ConfirmProvider } from './components/Confirm'
 import { AdminLayout } from './components/AdminLayout'
 import Login from './pages/Login'
+import { MESSAGES_CHANGED } from './lib/events'
 
 const Overview = lazy(() => import('./pages/Overview'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
@@ -60,11 +61,17 @@ function useUnreadCount(enabled: boolean) {
   const { pathname } = useLocation()
   useEffect(() => {
     if (!enabled || !supabase) return
-    supabase
-      .from('contact_messages')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'unread')
-      .then(({ count }) => setN(count ?? 0))
+    const sb = supabase
+    const load = () => {
+      void sb
+        .from('contact_messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'unread')
+        .then(({ count }) => setN(count ?? 0))
+    }
+    load()
+    window.addEventListener(MESSAGES_CHANGED, load)
+    return () => window.removeEventListener(MESSAGES_CHANGED, load)
   }, [enabled, pathname])
   return n
 }
@@ -118,7 +125,7 @@ export default function AdminApp() {
             <Route path="login" element={<Login />} />
             <Route path="*" element={<Protected />} />
           </Routes>
-          <Toaster theme="dark" position="bottom-right" toastOptions={{ style: { background: '#0e1314', border: '1px solid rgba(255,255,255,0.1)', color: '#eef3f1' } }} />
+          <Toaster theme="dark" position="top-right" offset={72} toastOptions={{ style: { background: '#0e1314', border: '1px solid rgba(255,255,255,0.1)', color: '#eef3f1' } }} />
         </ConfirmProvider>
       </DirtyProvider>
     </AuthProvider>

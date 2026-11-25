@@ -9,6 +9,7 @@ export default function ExperiencePage() {
       <PageHeader title="Experience" description="Your career timeline. Drag to reorder (top = shown first). Only add achievements you can stand behind." />
       <CollectionManager<Experience & Record<string, unknown>>
         table="experiences"
+        toRow={(d) => ({ ...d, end_date: d.is_current ? null : d.end_date })}
         singular="Role"
         visibilityKey="is_visible"
         searchKeys={['title', 'company', 'location']}

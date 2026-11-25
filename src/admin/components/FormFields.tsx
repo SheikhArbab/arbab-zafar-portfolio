@@ -167,7 +167,7 @@ function FieldControl({ field: f, value, values, onChange, error }: ControlProps
       return (
         <div>
           {label}
-          <ListInput id={id} value={(value as string[]) ?? []} onChange={onChange} placeholder={f.placeholder} />
+          <ListInput id={id} label={f.label} value={(value as string[]) ?? []} onChange={onChange} placeholder={f.placeholder} />
           <FieldError>{error}</FieldError>
           {help}
         </div>
@@ -202,7 +202,22 @@ function FieldControl({ field: f, value, values, onChange, error }: ControlProps
         <div>
           {label}
           <div className="flex gap-2">
-            <Input {...common} value={String(value ?? '')} onChange={(e) => onChange(slugify(e.target.value))} className="font-mono" />
+            <Input
+              {...common}
+              value={String(value ?? '')}
+              // Soft clean while typing (keeps a trailing "-" so "my-project" can be typed), full slugify on blur.
+              onChange={(e) =>
+                onChange(
+                  e.target.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9-]+/g, '-')
+                    .replace(/-{2,}/g, '-')
+                    .replace(/^-+/, ''),
+                )
+              }
+              onBlur={(e) => onChange(slugify(e.target.value))}
+              className="font-mono"
+            />
             {source && (
               <Button variant="outline" onClick={() => onChange(slugify(source))} title="Generate from title">
                 Generate
@@ -275,7 +290,7 @@ export function TagsInput({ id, value, onChange, placeholder }: { id?: string; v
   )
 }
 
-function ListInput({ id, value, onChange, placeholder }: { id?: string; value: string[]; onChange: (v: string[]) => void; placeholder?: string }) {
+function ListInput({ id, value, onChange, placeholder, label }: { id?: string; value: string[]; onChange: (v: string[]) => void; placeholder?: string; label?: string }) {
   const update = (i: number, v: string) => onChange(value.map((x, k) => (k === i ? v : x)))
   const move = (i: number, d: number) => {
     const j = i + d
@@ -288,7 +303,13 @@ function ListInput({ id, value, onChange, placeholder }: { id?: string; value: s
     <div className="space-y-2">
       {value.map((v, i) => (
         <div key={i} className="flex gap-1.5">
-          <Input id={i === 0 ? id : undefined} value={v} onChange={(e) => update(i, e.target.value)} placeholder={placeholder} />
+          <Input
+            id={i === 0 ? id : undefined}
+            aria-label={`${label ?? 'Item'} ${i + 1}`}
+            value={v}
+            onChange={(e) => update(i, e.target.value)}
+            placeholder={placeholder}
+          />
           <Button variant="ghost" size="icon" onClick={() => move(i, -1)} aria-label="Move up" disabled={i === 0}>
             <ArrowUp className="h-3.5 w-3.5" />
           </Button>

@@ -10,6 +10,7 @@ import { FormRenderer, validate, type Errors, type FieldDef } from './FormFields
 import { Panel } from './PageHeader'
 import { useTrackDirty } from '../lib/dirty'
 import { deepEqual } from '../lib/paths'
+import { cleanupReplacedFiles, clearDraft, friendlyDbError, loadDraft, saveDraft } from '../lib/formHelpers'
 
 function mergeRow(table: Props['table'], data: Record<string, unknown> | null): Record<string, unknown> {
   if (table === 'profile') return mergeProfile(data) as unknown as Record<string, unknown>
@@ -58,7 +59,21 @@ export function SingletonEditor({ table, groups, onSaved, footer }: Props) {
 
   const pick = (o: Record<string, unknown> | null) => Object.fromEntries(columns.map((c) => [c, o?.[c]]))
   const dirty = Boolean(original && draft && !deepEqual(pick(original), pick(draft)))
-  useTrackDirty(`singleton:${table}:${columns.join()}`, dirty)
+  const draftKey = `singleton:${table}:${columns.join()}`
+  useTrackDirty(draftKey, dirty)
+
+  // Unsaved edits survive the browser Back button / reload (sessionStorage, this tab only).
+  const [pendingDraft, setPendingDraft] = useState<Record<string, unknown> | null>(null)
+  useEffect(() => {
+    if (dirty && draft) saveDraft(draftKey, pick(draft))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dirty, draft, draftKey])
+  useEffect(() => {
+    if (!original) return
+    const stored = loadDraft<Record<string, unknown>>(draftKey)
+    if (stored && !deepEqual(stored, pick(original))) setPendingDraft(stored)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [original === null, draftKey])
 
   const save = async () => {
     if (!draft) return
@@ -69,8 +84,11 @@ export function SingletonEditor({ table, groups, onSaved, footer }: Props) {
     const payload = { id: 1, ...pick(draft) }
     const { data, error } = await requireSupabase().from(table).upsert(payload).select('*').single()
     setSaving(false)
-    if (error) return toast.error(error.message)
+    if (error) return toast.error(friendlyDbError(error, allFields))
     const merged = mergeRow(table, data)
+    clearDraft(draftKey)
+    // Only after a successful save: delete uploads that were replaced or removed.
+    void cleanupReplacedFiles(allFields, original, merged)
     setOriginal(merged)
     setDraft(structuredClone(merged))
     toast.success(table === 'private_settings' ? 'Saved.' : 'Saved. Changes are live on the portfolio.')
@@ -86,10 +104,44 @@ export function SingletonEditor({ table, groups, onSaved, footer }: Props) {
 
   return (
     <div className="space-y-6 pb-24">
+      {pendingDraft && (
+        <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300/30 bg-amber-300/[0.06] px-4 py-3 text-sm">
+          <span className="text-amber-200">You have unsaved changes on this page from earlier.</span>
+          <span className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={() => {
+                setDraft({ ...draft, ...pendingDraft })
+                setPendingDraft(null)
+              }}
+            >
+              Restore
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                clearDraft(draftKey)
+                setPendingDraft(null)
+              }}
+            >
+              Discard
+            </Button>
+          </span>
+        </div>
+      )}
       {groups.map((g) => (
         <Panel key={g.title} title={g.title} description={g.description}>
           <div className={g.aside ? 'grid gap-6 xl:grid-cols-[1fr_20rem]' : undefined}>
-            <FormRenderer fields={g.fields} values={draft} onChange={setDraft} errors={errors} />
+            <FormRenderer
+              fields={g.fields}
+              values={draft}
+              onChange={(next) => {
+                setDraft(next)
+                if (Object.keys(errors).length) setErrors(validate(allFields, next))
+              }}
+              errors={errors}
+            />
             {g.aside?.(draft)}
           </div>
         </Panel>
@@ -106,7 +158,14 @@ export function SingletonEditor({ table, groups, onSaved, footer }: Props) {
           >
             <p className="text-sm text-amber-300">● You have unsaved changes</p>
             <div className="flex gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setDraft(structuredClone(original!))}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  clearDraft(draftKey)
+                  setDraft(structuredClone(original!))
+                }}
+              >
                 <RotateCcw className="h-3.5 w-3.5" /> Discard
               </Button>
               <Button size="sm" onClick={save} disabled={saving}>
